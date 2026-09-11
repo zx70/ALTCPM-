@@ -1,5 +1,5 @@
 TRS-80 Model I  (System 80 / Video Genie / PMC-80, etc..)
-    OS:  LifeBoat CP/M 1.4 and FMG CP/M 1.5
+    OS:  LifeBoat CP/M 1.4 (Small Systems Software) and FMG CP/M 1.5 (an earlier 1.4 version existed too)
     CPU: Z80
     BASE: 4200h
     TPA:  4300h
@@ -21,11 +21,17 @@ Heathkit H8 / H89  (and Zenith Z89)
     TPA:  4300h
 PAM-8 monitor resident in ROM at 0000h–07FFh and I/O extending to 2000h/4000h (prior to the HA-8-8 mod).
 
-
 Sharp PC-3200  (MZ-3200 early release ?)
     OS:  CP/M 2.2 ?
     CPU: Z80
     BASE: 4200h
     TPA:  4300h
 Special CP/M 2.2 build used on early models lacking the hardware Memory Mapper board.
+
+ZX Spectrum 128 (BetaDisk interface)
+    OS:  CP/M 2.2
+    CPU: Z80
+    BASE: 6000h
+    TPA:  6100h
+ZXCPM, derived by the Quorum 128 CP/M
 
