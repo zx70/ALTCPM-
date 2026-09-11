@@ -1,37 +1,5 @@
 # ALTCPM-
 A collection of tools, code and binaries pertaining the rare implementations of CP/M systems with the TPA is position different than 0100h (usually 4300h)
 
-Such configuration was first marketed by Lifeboat Associates to extend their software portfolio capability and run on computers not equipped with a memory mapper.  Most of those computers could be expanded with a memory mapper (a.k.a. "org 0" or "allram" mode):
-
-TRS-80 Model I  (System 80 / Video Genie / PMC-80, etc..)
-    OS:  LifeBoat CP/M 1.4 and FMG CP/M 1.5
-    CPU: Z80
-    BASE: 4200h
-    TPA:  4300h
-Level II ROM and Video RAM locked at 0000h–3FFFh
-Omikron Mapper and other hardware mods were available to extend the computer to a standard memory model.
-
-SKS 2500 / Triumph-Adler P2 (also ITT 3030 and HELL DS2069 ?)
-    OS:  CP/M 2.2
-    CPU: 8085
-    BASE: 4200h
-    TPA:  4300h
-Boot ROM and system I/O locked in lower RAM.
-Hardware bank-switching configuratiosn were later introduced.
-
-Heathkit H8 / H89  (and Zenith Z89)
-    OS:  LifeBoat CP/M 1.43
-    CPU: Z80
-    BASE: 4200h
-    TPA:  4300h
-PAM-8 monitor resident in ROM at 0000h–07FFh and I/O extending to 2000h/4000h (prior to the HA-8-8 mod).
-
-
-Sharp PC-3200  (MZ-3200 early release ?)
-    OS:  CP/M 2.2 ?
-    CPU: Z80
-    BASE: 4200h
-    TPA:  4300h
-Special CP/M 2.2 build used on early models lacking the hardware Memory Mapper board.
-
+Such configuration was first marketed by Lifeboat Associates to extend their software portfolio capability and run on computers not equipped with a memory mapper.  Most of those computers could be expanded with a memory mapper (a.k.a. "org 0" or "allram" mode)
 
