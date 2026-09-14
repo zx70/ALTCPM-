@@ -1,1 +1,3 @@
 ALTCPM and ZXCPM related tools
+
+The kits require a command line CP/M emulator (e.g. CPM.EXE) and the z88dk/support/rel/rebase.c program.
