@@ -1,1 +1,4 @@
 ZXCPM related tools (cross development, disk editing, etc)
+
+The BASIC Compiler is an exact conversion of an early version, all the original functionalities (and limits) sould correspond.
+The Fortran-80 compiler is a hack, probably the file I/O is not fully working.
