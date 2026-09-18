@@ -1,0 +1,151 @@
+
+1.  TO BEGIN EXECUTION
+
+    To play a game of chess, respond "Y" to question:
+
+            "WELCOME TO CHESS. CARE FOR A GAME ?"
+
+    An answer of "N" will get you to the routine that
+    allows you to set up a board position (see item 7).
+
+    The player selects white by entering "W" or black
+    by entering "B" in response to the question:
+
+            "WOULD YOU LIKE TO PLAY WHITE (W)
+             OR BLACK (B) ?"
+
+    You will then be asked:
+
+            "SELECT LOOK AHEAD (1-6)"
+
+    This allows the player to select the depth of search.
+    It is recommended that you select only 1.  Any higher
+    number causes the computer to spend a long time making
+    moves, time which you may not want pay for if you have
+    made a toll call.
+
+    At this point the board will appear on the screen.  If
+    you choose white, Z80CHESS will be waiting for your move
+    entry.
+
+
+2.  TO ENTER A MOVE
+
+    Moves must be entered in algebraic chess notation.
+    This means you must tell Z80CHESS the file and rank
+    coordinates of the squares you are moving from and to.
+    The files are lettered a-h and the ranks are numbered
+    1-8.  So the coordinates of the board are:
+
+
+           a     b     c     d     e     f     g     h
+        |-----|-----|-----|-----|-----|-----|-----|-----|
+     8  | a8  | b8  | c8  | d8  | e8  | f8  | g8  | h8  | 8
+        |-----|-----|-----|-----|-----|-----|-----|-----|
+     7  | a7  | b7  | c7  | d7  | e7  | f7  | g7  | h7  | 7
+        |-----|-----|-----|-----|-----|-----|-----|-----|
+     6  | a6  | b6  | c6  | d6  | e6  | f6  | g6  | h6  | 6
+        |-----|-----|-----|-----|-----|-----|-----|-----|
+     5  | a5  | b5  | c5  | d5  | e5  | f5  | g5  | h5  | 5
+        |-----|-----|-----|-----|-----|-----|-----|-----|
+     4  | a4  | b4  | c4  | d4  | e4  | f4  | g4  | h4  | 4
+        |-----|-----|-----|-----|-----|-----|-----|-----|
+     3  | a3  | b3  | c3  | d3  | e3  | f3  | g3  | h3  | 3
+        |-----|-----|-----|-----|-----|-----|-----|-----|
+     2  | a2  | b2  | c2  | d2  | e2  | f2  | g2  | h2  | 2
+        |-----|-----|-----|-----|-----|-----|-----|-----|
+     1  | a1  | b1  | c1  | d1  | e1  | f1  | g1  | h1  | 1
+        |-----|-----|-----|-----|-----|-----|-----|-----|
+           a     b     c     d     e     f     g     h
+
+
+    The move itself is entered as ff-tt, so to play the king's
+    pawn up two squares you would enter:
+
+                    "e2-e4"
+
+    If Z80CHESS responded with the same move, it would print:
+
+                    "e7-e5"
+
+
+
+3.  TO CASTLE
+
+    Just enter the king's move.  The rook will tag along.  For
+    example, if you are white and wish to castle king's side,
+    enter:
+
+                     "e1-g1"
+
+    You will see both your king and rook move.  When Z80CHESS
+    castles, he lists it as 0-0 or 0-0-0 as in normal chess no-
+    tation.
+
+
+4.  TO CAPTURE EN PASSANT
+
+    If you wish to capture one of Z80CHESS's pawns using the
+    en passant privilege, enter your pawn's move.  After your
+    pawn move is displayed, Z80CHESS's pawn will blink and
+    then vanish.  When Z80CHESS captures en passant, his move
+    is displayed on the board in the same way.  Z80CHESS prints
+    it in the move list as PxPep.
+
+
+5.  TO PLAY ANOTHER GAME AFTER CHECKMATE
+
+    If either you or Z80CHESS is checkmated, and you wish to
+    play again, just hit any key.  The screen will blank out
+    and Z80CHESS will ask:
+
+                "CARE FOR ANOTHER GAME ?"
+
+    Replies to this question are just like those to the origi-
+    nal "CARE FOR A GAME ?"
+
+
+6.  TO RESIGN A HOPELESS GAME OR TAKE BACK A MOVE
+
+    If you decide your position is hopeless, or you wish to
+    change a move entered in error (considered indelicate,
+    non-etiquette and a definite NO-NO in more respectable
+    chess circles), first wait until it is your turn to move.
+    Then enter "control-R".  You will immediately get the
+    "CARE FOR ANOTHER GAME ?" question.  If you want to start
+    over, type "Y", but if you want to correct (considered
+    indelicate, non-etiquette and a definite NO-NO in the most
+    respectable chess coteries) the board display, type "N".
+    You will then get the routine that allows you to set up
+    a board position.
+
+
+7.  TO SET UP OR CORRECT A BOARD POSITION
+
+    If you typed "N" to a "CARE FOR A GAME ?" question, Z80-
+    CHESS will now ask:
+
+              "WOULD YOU LIKE TO ANALYZE A POSITION ?"
+
+    If you answer "N" to this one, you will be out of Z80-
+    CHESS entirely and back in the computer's monitor state.
+    An answer of "Y" will display line by line, in algebraic
+    chess notation, the move list for each piece on the board.
+    A carriage return will leave that piece and/or square un-
+    changed.  Whatever you type in over the displayed posting
+    (a legal chess notation, of course) will change the square
+    accordingly.
+
+
+8.  SUMMARY OF ANALYSIS COMMANDS
+
+    <CR>
+
+    A carriage return, as mentioned, leaves the contents of the
+    square unchanged.
+
+    <0>
+
+    An entry of "0", or of the space bar, or any key not listed
+    in these commands will empty the square.
+
