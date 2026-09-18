@@ -3,3 +3,120 @@
 > cpm F80.CPM test=test
 > cpm L80ZX.CPM test,cpmlib,test /n/e
 > cpmcp -f quorum test.trd test.cm6 0:test.cm6
+
+
+
+		CPMLIB.MOD
+
+
+This is a short guide to modifying the contents of CPMLIB.REL.
+
+In the examples that follow, the "system disk" is assumed to be
+on drive A:. That drive is assumed to contain the Microsoft
+FORTRAN-80 package, including F80.COM, L80.COM, M80.COM and
+LIB.COM.  The CPMLIB files are assumed to be on drive B:.
+
+
+A)	CPMLIB structure
+
+	CPMLIB.REL should be thought of as being divided into
+	three levels of subroutines.  The first are the
+	primary entry points from FORTRAN programs. These
+	routines are all at the beginning of the library.
+	Since there is no interdependence between them,
+	they have been placed in alphabetical order.
+
+
+	The second level contains various service routines
+	for the primary entry point routines.  These are
+	somewhat interdependent, and should be arranged so
+	that a single search through the library can resolve
+	all references.
+
+	The last level contains the assembly language
+	routines that perform the CP/M function calls.
+	They should be last, since they can be called by
+	any of the higher-level routines.
+
+	The first two levels are written in FORTRAN and are
+	contained in the file CPMINT.FOR which stands for
+	CP/M INTerface.
+
+	The third level routines are written in assembly
+	and are contained in the files CPMFN.MAC and 
+	CPMFNA.MAC.  CPMFN.MAC contains the BDOS calls,
+	and CPMFNA.MAC contains the command line routine.
+	Both of the assembly language routines assume a
+	standard ORG 0000H version of CP/M.  If your CP/M
+	has a different origin, you will need to reassemble
+	these two routines.
+
+B)	Adding or Changing Functions
+
+	New functions can be added by writing the appropriate
+	FORTRAN interface routine. That routine, and any support
+	routines it needs, should be inserted into CPMINT.FOR.
+	Then, recompile the entire FORTRAN file.
+
+		A>F80 =B:CPMINT.FOR
+
+	If new BDOS function calls are required, set the 
+	appropriate equates in CPMFN.MAC and reassemble it.
+
+		A>M80 =B:CPMFN.MAC
+
+	Otherwise, you may need to write a new assembly language
+	routine.
+
+	You will also need to reassemble to change the CP/M
+	origin if your version is not ORG 0000H.
+	In this case, all .MAC files will need to be edited
+	and reassembled.
+
+	By convention, the high level routines are all written
+	with no interdependence. They are inserted at the 
+	beginning of the library in alphabetical order.
+
+	The secondary FORTRAN routines all have names ending
+	with a dollar sign ($).  They must be arranged so that
+	a single search thru the library resolves all references.
+	The ERROR$ routine is placed last in the FORTRAN section,
+	since in the future any of the other routines may
+	issue a call to it.
+
+	The assembly routines are all named with a prefix of
+	CPMF (for CP/M Function).  The BDOS functions are in
+	the file CPMFN.MAC / CPMFN.REL and the entry points
+	contain the BDOS function number -- CPMF19, for
+	example, is the entry for BDOS function number 19.
+	Additional routines are in files with alphabetic 
+	suffixes.  The first (and only) file in this category
+	is CPMFNA.MAC / CPMFNA.REL for command line processing.
+	The second would be CPMFNB, etc.
+
+	While not essential, this convention does define an
+	orderly system for naming the routines in the library.
+
+C)	Rebuilding the Library
+
+	Once the new or modified routines are compiled and
+	assembled, use the LIB-80 program to construct your
+	new library.
+	LIB works on the currently-logged drive, so log in
+	to drive B: if that is where the CPMLIB files are.
+
+		A>B:
+		B>A:LIB
+		*NEWLIB=CPMINT,CPMFN,CPMFNA
+		*/E
+
+	Test the new library.  If it is OK, then you can erase
+	the old library and rename the new one.
+
+		B>ERA CPMLIB.REL
+		B>REN CPMLIB.REL=NEWLIB.REL
+
+
+
+
+
