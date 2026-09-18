@@ -4,10 +4,13 @@
 > cpm L80ZX.CPM test,cpmlib,test /n/e
 > cpmcp -f quorum test.trd test.cm6 0:test.cm6
 
+> TEST RENAME
+> TEST ERASE
+> TEST INCHR
+> TEST EXIST
+> TEST INKEY <-- this is probably colliding with the late F80 compiler features
 
-
-		CPMLIB.MOD
-
+------------------------------------------------------------------
 
 This is a short guide to modifying the contents of CPMLIB.REL.
 
