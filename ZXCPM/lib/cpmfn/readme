@@ -1,8 +1,24 @@
 
-
 > cpm F80.CPM test=test
 > cpm L80ZX.CPM test,cpmlib,test /n/e
 > cpmcp -f quorum test.trd test.cm6 0:test.cm6
+
+The routines were written specifically to implement the following
+functions which are not normally supported from within FORTRAN:
+
+        ERASE           Erase a file.
+
+        EXIST           Test to see if a file exists.
+
+        GETCMD          Input the command line "tail".
+
+        INCHR           Input a single character without a terminating
+                        carriage return.
+
+        INKEY           Input a character (if one is pending) or
+                        a null (if not).
+
+        RENAME          Rename a file.
 
 > TEST RENAME
 > TEST ERASE
