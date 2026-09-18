@@ -1,0 +1,532 @@
+			CPMLIB.DOC
+
+	Version 1.0			January 12, 1982
+
++ + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+
+CPMLIB is a library of routines which can be called from
+Microsoft FORTRAN-80 programs to interface with selected
+CP/M CCP and BDOS functions.
+By means of this library, the following CP/M
+functions may be added to any FORTRAN program:
+
+	Input a character from the console without a
+	terminating carriage return.
+	(Two forms of this function are supported.)
+
+	Test for the presence of a file.
+
+	Erase a file or group of files.
+
+	Rename a file.
+
+	Get the command line "tail" as program input.
+
+The library is made up of three levels of subroutines.
+
+The highest level are those routines normally called from
+within a user program.  These are described first.
+The "high-level" routines are:
+	EXIST .... Test for presence of a file.
+	ERASE .... Erase a file.
+	GETCMD ... Get the command line "tail".
+	INCHR .... Input character from console (with echo).
+	INKEY .... Input character from console (without echo).
+	RENAME ... Rename a file.
+
+Second is a group of routines which provide support to the
+high-level routines.  These may also be called from a user
+program if required.  They are described at the end of this
+document.
+The "low-level" routines are:
+	FCB$ ..... Build a CP/M File Control Block.
+	FNAME$ ... Extract a CP/M File Name from a string.
+	MAP$ ..... Map character to upper case.
+	ERROR$ ... Print error messages from the library.
+
+Finally, there are the machine-level calls to BDOS. Normally
+a user program will not call these routines directly.
+
++ + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+
+To use the library, you just need to CALL the appropriate
+routines from your program.   Compile as you normally would.
+Then, in the LINK-80  step, request a search of CPMLIB prior
+to the normal search of FORLIB.  For example:
+
+	L80 prog,CPMLIB/S,FORLIB/S,prog/N/E
+
+The search of CPMLIB should come before the search of FORLIB.
+
+The routines available in the CPMLIB are:
+
+	CALL EXIST  ( NDRIVE, STRING, NBYTES, IOK )
+	CALL ERASE  ( NDRIVE, STRING, NBYTES )
+	CALL GETCMD ( STRING )
+	CALL INCHR  ( NOPT, CHAR )
+	CALL INKEY  ( NOPT, CHAR )
+	CALL RENAME ( NDRIVE, FNOLD, FNNEW, NBOLD, NBNEW )
+
+	CALL FCB$   ( STRING, LSTRNG, FCB )
+	CALL FNAME$ ( STRING, LSTRNG, NDRIVE, FILNAM )
+	CALL MAP$   ( AIN, AOUT )
+	CALL ERROR$ ( NERROR, ANAME, ARRAY )
+
+
+A detailed description of each routine follows:
+
+
+
+
+
++ + + + + + + + + + + + HIGH LEVEL ROUTINES + + + + + + + + + +
+
+                        Primary Entry Points
+                        into the Library
+
+
+                        * * * * * * * * * *
+                        *                 *
+                        *    E R A S E    *
+                        *                 *
+                        * * * * * * * * * *
+
+
+      Usage: CALL ERASE ( NDRIVE, STRING, NBYTES )
+
+		NDRIVE = < integer >
+		STRING = < byte array >
+		NBYTES = < integer >
+
+Erase a CP/M file.
+
+The file being erased should be closed before this routine
+is called.  Otherwise, duplicate FCB's will exist for the
+file and unpredictable results may occur.
+
+Input Arguments:
+NDRIVE ... Drive number (1=A:, 2=B:, etc.)
+           If entered as zero, then the currently-logged
+           drive is used unless the STRING array contains
+           a drive specification in the file name.
+STRING ... A byte array containing a valid CP/M file name.
+           The name may contain a drive specification if
+           desired.
+NBYTES ... The number of bytes in the STRING array.
+           If entered as zero, the STRING will be assumed
+           to be 11 bytes long, with the file name blank
+           filled (in the same format as for a Microsoft
+           OPEN call).  In this mode, the drive cannot be
+           passed in the file name.
+
+Note: The drive may be specified in several ways. If more
+      than one specification is used, they must all agree
+      or a DRIVE CONFLICT error will be generated.
+      If the file to be erased cannot be found,
+      a NO FILE error will be generated.
+
+Output Arguments:
+    (none)
+
+
+Examples of valid calls:
+
+    CALL ERASE ( 0, 'b:ab.x', 6 )
+    CALL ERASE ( 2, 'AB.X', 4 )
+    CALL ERASE ( 2, 'AB      X  ', 11 )
+    CALL ERASE ( NDR, FILNAM, NLONG )
+
+Assuming that, in the last example, NDR = 2, FILNAM is a byte
+array containing "ab.x", and NLONG = 4, then all of the
+examples will erase the file AB.X on drive B:.
+
+
+
+                        * * * * * * * * * *
+                        *                 *
+                        *    E X I S T    *
+                        *                 *
+                        * * * * * * * * * *
+
+
+      Usage: CALL EXIST ( NDRIVE, STRING, NBYTES, IOK )
+
+		NDRIVE = < integer >
+		STRING = < byte array >
+		NBYTES = < integer >
+		IOK    = < integer >
+
+Test to see if a file exists.
+
+
+Input Arguments:
+NDRIVE ... Drive number (1=A:, 2=B:, etc.)
+           If entered as zero, then the currently-logged
+           drive is used unless the STRING array contains
+           a drive specification in the file name.
+STRING ... A byte array containing a valid CP/M file name.
+           The name may contain a drive specification if
+           desired.
+NBYTES ... The number of bytes in the STRING array.
+           If entered as zero, the STRING will be assumed
+           to be 11 bytes long, with the file name blank
+           filled (in the same format as for a Microsoft
+           OPEN call).  In this mode, the drive cannot be
+           passed in the file name.
+
+Note: The drive may be specified in several ways. If more
+      than one specification is used, they must all agree
+      or a DRIVE CONFLICT error will be generated.
+      If the file to be erased cannot be found,
+      a NO FILE error will be generated.
+
+Output Arguments:
+IOK ...... Returned value:
+           0 = file doesn't exist
+           1 = file exists
+
+
+
+                        * * * * * * * * * *
+                        *                 *
+                        *   G E T C M D   *
+                        *                 *
+                        * * * * * * * * * *
+
+
+      Usage: CALL GETCMD ( ARRAY )
+
+		ARRAY  = < byte array >
+
+This routine will get the "command line tail" and pass it
+into the calling program.
+Leading blanks are stripped off.
+
+The "tail" is that part of the command line that follows
+the program name.  For example, if the following line
+were typed at the console following a CP/M prompt:
+
+       b:foo options:a,c,d,f,l
+
+the system would load program FOO.COM from drive B: and the
+"tail" would be the character string OPTIONS:A,C,D,F,L.
+
+CP/M will always map the command line to upper case.
+
+The user's program must interpret the "tail". All this
+routine does is pass it to the FORTRAN program, after 
+leading blanks are stripped off.
+
+Some other considerations:
+
+    You MUST get the "tail" before any disk operations
+    are performed in the program.  Otherwise, CP/M may
+    overwrite the command line buffer during a disk
+    operation.  Thus, you should call this routine as
+    one of the first activities in your program.
+
+    You should scan the "tail" carefully, watching out
+    for trailing and imbedded blanks.  The line
+    will be passed exactly as typed except for mapping
+    to upper case.
+
+Input arguments:
+    (none)
+
+Output arguments:
+ARRAY .... This is a byte array, which must be dimensioned
+           in the calling program to a length sufficient to
+           hold the entire "tail".  Otherwise, important
+           data or program instructions may be overwritten
+           by the command line information.  Dimensioning
+           the variable to 80 bytes is usually sufficient.
+           The FIRST BYTE of the returned array will contain
+           the number of characters to follow.  Only these
+           characters are valid.  The remainder of the array
+           will be unchanged from its original contents, or
+           will contain "garbage".
+
+
+
+                        * * * * * * * * * *
+                        *                 *
+                        *    I N C H R    *
+                        *                 *
+                        * * * * * * * * * *
+
+
+      Usage: CALL INCHR ( NOPT, CHAR )
+
+		NOPT   = < integer >
+		CHAR   = < byte >
+
+This subroutine reads a character from the console.
+The character is immediately echoed to the console.
+It is also returned as the value of the argument CHAR.
+
+If no character is pending at the console, execution
+halts until a character is typed.
+
+The character is transmitted as soon as it is typed.
+The RETURN or ENTER key is not required to complete the 
+entry.
+
+Input Arguments:
+NOPT ..... Option for interpretation of input character.
+           (Add the following values together to determine
+            the value to use.)
+           0 = (no option)
+           1 = (no option)
+           2 = map lower case alphabet to upper case
+           4 = stop execution if ctrl-C
+
+Output Arguments:
+CHAR ..... The resulting character.
+
+
+
+                        * * * * * * * * * *
+                        *                 *
+                        *    I N K E Y    *
+                        *                 *
+                        * * * * * * * * * *
+
+
+      Usage: CALL INKEY ( NOPT, CHAR )
+
+		NOPT   = < integer >
+		CHAR   = < byte >
+
+This function reads a character from the console.
+The character is not echoed to the console.
+It is returned as the value of the argument CHAR.
+
+If no character is pending at the console, the
+NUL character (ASCII 0) is returned and execution
+of the program continues.
+
+The character is transmitted as soon as it is typed.
+The RETURN or ENTER key is not required to complete the 
+entry.
+
+Input Arguments:
+NOPT ..... Option for interpretation of input character.
+           (Add the following values together to determine
+            the value to use.)
+           0 = (no option)
+           1 = wait for a character to be typed
+           2 = map lower case alphabet to upper case
+           4 = stop execution if ctrl-C
+
+Output Arguments:
+CHAR ..... The resulting character.
+
+
+
+                        * * * * * * * * * *
+                        *                 *
+                        *   R E N A M E   *
+                        *                 *
+                        * * * * * * * * * *
+
+
+      Usage: CALL RENAME ( NDRIVE, FNOLD, FNNEW, NBOLD, NBNEW )
+
+		NDRIVE = < integer >
+		FNOLD  = < byte array >
+		FNNEW  = < byte array >
+		NBOLD  = < integer >
+		NBNEW  = < integer >
+
+Rename a CP/M file.
+
+The file being renamed should be closed before this routine
+is called.  Otherwise, duplicate FCB's will exist for the
+file and unpredictable results may occur.
+
+Input Arguments:
+NDRIVE ... Drive number (1=A:, 2=B:, etc.)
+           If entered as zero, then the currently-logged
+           drive is used unless the FNOLD or FNNEW array
+           contains a drive specification in the file name.
+FNOLD .... A byte array containing a valid CP/M file name.
+FNNEW .... A byte array containing a valid CP/M file name.
+           The name may contain a drive specification if
+           desired.
+           FNOLD is the old name; FNNEW is the new name.
+NBOLD ... The number of bytes in the FNOLD array.
+NBNEW ... The number of bytes in the FNNEW array.
+           If entered as zero, the array will be assumed
+           to be 11 bytes long, with the file name blank
+           filled (in the same format as for a Microsoft
+           OPEN call).  In this mode, the drive cannot be
+           passed in the file name.
+
+Note: The drive may be specified in several ways. If more
+      than one specification is used, they must all agree
+      or a DRIVE CONFLICT error will be generated.
+      If the new file name already exists, a FILE ALREADY
+      EXISTS error will be generated.  If the old file 
+      cannot be found, a NO FILE error will be generated.
+
+Output Arguments:
+    (none)
+
+
+Examples of valid calls:
+
+    CALL RENAME ( 0, 'b:ab.x', 'cd.y', 6, 4 )
+    CALL RENAME ( 0, 'ab.x', 'b:cd.y', 4, 6 )
+    CALL RENAME ( 2, 'ab.x', 'cd.y', 4, 4 )
+    CALL RENAME ( 2, 'AB      X  ', 'CD      Y  ', 0, 0 )
+    CALL RENAME ( NDR, FIL1, FIL2, NB1, NB2 )
+
+Assuming that, in the last example, NDR = 2, FIL1 is a byte
+array containing "ab.x", FIL2 is a byte array containing
+"cd.y", NB1 = 4, and NB2 = 4,  then all of the
+examples will rename the file AB.X to CD.Y on drive B:.
+
+
+
++ + + + + + + + + + + + LOW  LEVEL ROUTINES + + + + + + + + + +
+
+                        Service Routines for
+                        High-Level Routines
+
+
+
+                        * * * * * * * * * *
+                        *                 *
+                        *     F C B $     *
+                        *                 *
+                        * * * * * * * * * *
+
+
+      Usage: CALL FCB$ ( STRING, LSTRNG, FCB )
+
+		STRING = < byte array >
+		LSTRNG = < integer >
+		FCB    = < byte array >
+
+Subroutine to build a valid File Control Block (FCB)
+
+Input arguments:
+STRING ... Input string ( a byte array ) of length LSTRNG
+LSTRNG ... Integer value is length of STRING array in bytes.
+
+Output arguments:
+FCB ...... The completed FCB ( a byte array ) which must
+           be 36 bytes long.  The first 12 bytes will be
+           initialized to the drive and file specified
+           in STRING. The remainder will be zeroed.
+
+
+
+                        * * * * * * * * * *
+                        *                 *
+                        *   F N A M E $   *
+                        *                 *
+                        * * * * * * * * * *
+
+
+      Usage: CALL FNAME$ ( STRING, LSTRNG, NDRIVE, FILNAM )
+
+		STRING = < byte array >
+		LSTRNG = < integer >
+		NDRIVE = < integer >
+		FILNAM = < byte array >
+
+Subroutine to extract a CP/M file name from an input
+character string.
+Complete error trapping is NOT included in this routine.
+Thus, the programmer should excercize some caution in
+the use of this routine.
+Asterisks (*) are expanded into questions for the file
+name and file type, and drive information is extracted
+if it is included in the string as the first character
+followed by a colon (:).
+Thus, all valid CP/M file descriptions will be handled
+properly.
+
+Input Arguments:
+STRING ... Input string ( a byte array ) of length LSTRNG
+LSTRNG ... Integer value is length of STRING array in bytes.
+
+Output Arguments:
+NDRIVE ... Integer value of drive number:
+           0 = logged in drive
+           1 = drive A:
+           2 = drive B:
+           etc.
+FILNAM ... Output string ( a byte array ) of length 12.
+           The first byte duplicates the drive value in
+           NDRIVE.  The remaining bytes are the name and
+           extension, blank-filled to exactly 11 characters.
+
+The format of the output arguments is such that they serve
+two purposes:
+
+1) To construct a Microsoft FORTRAN call to the OPEN subroutine,
+   use the form:
+       CALL OPEN ( lun, FILNAM(2), NDRIVE )
+   where 'lun' is the unit number.  Specifying FILNAM(2) in
+   the argument list passes the address of the second element
+   which is the first character of the 11-byte file name.
+
+2) To construct a CP/M file control block (FCB), use the
+   FILNAM array as the first 12 bytes of the FCB, and the
+   drive specification will be placed in the first byte as
+   required.
+
+
+
+                        * * * * * * * * * *
+                        *                 *
+                        *     M A P $     *
+                        *                 *
+                        * * * * * * * * * *
+
+
+      Usage: CALL MAP$ ( AIN, AOUT )
+
+		AIN    = < byte >
+		AOUT   = < byte >
+
+Map a lower case character to upper case.
+
+If the input character is not a lower case alphabet
+character, no mapping takes place.
+
+Input Arguments:
+AIN ..... The one-byte value to be mapped.
+
+Output Arguments:
+AOUT .... The one-byte value mapped to u.c.
+
+
+
+                        * * * * * * * * * *
+                        *                 *
+                        *   E R R O R $   *
+                        *                 *
+                        * * * * * * * * * *
+
+
+      Usage: CALL ERROR$ ( NERROR, ANAME, ARRAY )
+
+		NERROR = < integer >
+		ANAME  = < byte array >
+		ARRAY  = < byte array >
+
+Error printing routine.
+
+Input Arguments:
+NERROR ... Number of the error message to print.
+ANAME .... A six-byte name for the routine which called
+           the error.
+ARRAY .... A byte array, the contents of which depend on
+           the error being processed.
+
+Output Arguments:
+    (none)
+
