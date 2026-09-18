@@ -1,0 +1,5 @@
+
+
+> cpm F80.CPM test=test
+> cpm L80ZX.CPM test,cpmlib,test /n/e
+> cpmcp -f quorum test.trd test.cm6 0:test.cm6
