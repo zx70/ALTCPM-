@@ -1,0 +1,623 @@
+;
+;	CPMFN
+;
+;	CP/M BDOS Functions - interface routines
+;
+;
+;	Originally written:  November, 1981
+;
+;	Pre-release modifications:
+;	Dec. 10, 1981 - Added EXIST routine (FN17)
+;
+;	Released to CP/M User's Group as:
+;	Version 1.0
+;	January 12, 1982
+;
+;	Author: William R. Brandoni
+;
+;	Language: Microsoft M80 (MACRO-80 assembler) Version 3.4 (26-Nov-80)
+;
+;
+;	See the "User-Defined Equates" section for modifications
+;	you may have to make to reassemble this file.
+;
+;	Note that function classes that are not active at this
+;	time are untested.
+;
+; * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+;
+;	This file is a general purpose interface for
+;	BDOS calls to CP/M version 2.x.
+;
+;	The main reason for its existance is to provide
+;	an interface between Microsoft FORTRAN-80 and
+;	several I/O operations not supported in that
+;	language.
+;
+;	This file is intended as support to Microsoft FORTRAN
+;	subroutines which in turn provide all of the
+;	interfacing and setup functions prior to calling
+;	one of these entry points.
+;	As a result, this file is NOT a complete BDOS interface.
+;	It provides only the basic machine-level system calls.
+;	Arguments are assumed to be passed into these routines
+;	in Microsoft format (ie. all arguments passed as addresses).
+;
+;	The structure of this file is such that a maximum of
+;	two arguments can be passed from FORTRAN.  This is because
+;	the third would be passed in the BC register pair, and
+;	register B is overwritten immediately upon entry.
+;	If more than two arguments should be required at a future
+;	time, then the entry point would need to be restructured.
+;
+;	For the time being, only a few BDOS functions are supported.
+;	However, the structure is such that more can be added
+;	at a future time.
+;	(Note that many BDOS I/O functions are already contained
+;	within FORTRAN, so they do not need to be supported here.)
+;
+; * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+;
+;	For an explanation of the various BDOS functions, see
+;	the "CP/M 2.0 INTERFACE GUIDE" (c) 1979 by Digital
+;	Research -- including the addendum for CP/M 2.2
+;
+; * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+;
+;	For programming expediency, the BDOS functions
+;	were assigned to arbitrary "classes".
+;
+;	The "classes" are defined as:
+;
+;	CLASS A:	Function value:		C
+;
+;	CLASS B:	Function value:		C
+;			Returned value:		A
+;
+;	CLASS C:	Function value:		C
+;			Input value:		E
+;
+;	CLASS D:	Function value:		C
+;			Input value:		E
+;			Returned value:		A
+;
+;	CLASS E:	Function value:		C
+;			Input address:		<DE>
+;
+;	CLASS F:	Function value:		C
+;			Input address:		<DE>
+;			Returned value:		A
+;
+;	CLASS G:	Function value:		C
+;			Input value:		DE
+;			Returned value:		A
+;
+;	CLASS H:	Function value:		C
+;			Returned value:		HL
+;
+;	CLASS I:	Function value:		C
+;			Returned address:	<HL>
+;
+;
+; * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+;
+;	Using this classification, the functions (0 - 40) 
+;	provided by CP/M version 2.2 are assigned 
+;	as follows:
+;
+;	CLASS		FUNCTION
+;
+;	A		 0, 13, 28
+;	B		 1,  3,  7, 11, 18, 25
+;	C		 2,  4,  5,  8, 14
+;	D		 6, 32
+;	E		 9, 10, 26, 35, 36
+;	F		15, 16, 17, 19, 20, 21, 22, 23,
+;			30, 33, 34, 40
+;	G		37
+;	H		12, 24, 29
+;	I		27, 31
+;	(undefined)	38, 39
+;
+; * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+	PAGE
+; * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+;
+;	User-Defined Equates
+;
+; * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+;
+;	Define base of CP/M (std version is 0000H)
+;
+;
+	BASE	EQU	6000H	;<--- set to base of your CP/M
+;
+;
+;
+;	Define which functions to support: 0 = no / 1 = yes
+;
+;
+;				Function		FORTRAN 
+;				Description		Interface
+;							Routine
+;
+	FN0	EQU	0	;system reset
+	FN1	EQU	1	;console input		INCHR
+	FN2	EQU	0	;console output
+	FN3	EQU	0	;reader input
+	FN4	EQU	0	;punch output
+	FN5	EQU	0	;list output
+	FN6	EQU	1	;direct console I/O	INKEY
+	FN7	EQU	0	;get I/O byte
+	FN8	EQU	0	;set I/O byte
+	FN9	EQU	0	;print string
+	FN10	EQU	0	;read console buffer
+	FN11	EQU	0	;get console status
+	FN12	EQU	0	;return version number
+	FN13	EQU	0	;reset disk system
+	FN14	EQU	0	;select disk
+	FN15	EQU	0	;open file
+	FN16	EQU	0	;close file
+	FN17	EQU	1	;search for first	EXIST (1)
+	FN18	EQU	0	;search for next
+	FN19	EQU	1	;delete file		ERASE
+	FN20	EQU	0	;read sequential
+	FN21	EQU	0	;write sequential
+	FN22	EQU	0	;make file
+	FN23	EQU	1	;rename file		RENAME
+	FN24	EQU	0	;return login vector
+	FN25	EQU	0	;return current disk
+	FN26	EQU	0	;set DMA address
+	FN27	EQU	0	;get address (alloc)
+	FN28	EQU	0	;write protect disk
+	FN29	EQU	0	;get R/O vector
+	FN30	EQU	0	;get file attributes
+	FN31	EQU	0	;get address (disk parms)
+	FN32	EQU	0	;set/get user code
+	FN33	EQU	0	;read random
+	FN34	EQU	0	;write random
+	FN35	EQU	0	;compute file size
+	FN36	EQU	0	;set random record
+	FN37	EQU	0	;reset drive
+	FN38	EQU	0	;*** not defined ***
+	FN39	EQU	0	;*** not defined ***
+	FN40	EQU	0	;write random with zero fill
+;
+;	Notes:	(1)	used in RENAME, also.
+;
+; * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+	PAGE
+; * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+;
+;	Miscellaneous Equates
+;
+	BDOS	EQU	BASE+0005H
+;
+;	Define which classes are active
+;
+	CLASSA	EQU	FN0+FN13+FN28
+	CLASSB	EQU	FN1+FN3+FN7+FN11+FN18+FN25
+	CLASSC	EQU	FN2+FN4+FN5+FN8+FN14
+	CLASSD	EQU	FN6+FN32
+	CLASSE	EQU	FN9+FN10+FN26+FN35+FN36
+	CLF	EQU	FN15+FN16+FN17+FN19+FN20+FN21+FN22+FN23
+	CLASSF	EQU	CLF+FN30+FN33+FN34+FN40
+	CLASSG	EQU	FN37
+	CLASSH	EQU	FN12+FN24+FN29
+	CLASSI	EQU	FN27+FN31
+;
+;	Define which temporary variables are needed
+;
+	MAKEP2	EQU	CLASSD+CLASSF+CLASSG
+	MAKEP1	EQU	MAKEP2+CLASSB+CLASSC+CLASSE+CLASSH
+;
+	PAGE
+; * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+;
+;	Define the entry points
+;
+	IF	FN0
+	ENTRY	CPMF0
+CPMF0:	MVI	C,0
+	JMP	GOTOA
+	ENDIF
+;
+	IF	FN1
+	ENTRY	CPMF1
+CPMF1:	MVI	C,1
+	JMP	GOTOB
+	ENDIF
+;
+	IF	FN2
+	ENTRY	CPMF2
+CPMF2:	MVI	C,2
+	JMP	GOTOC
+	ENDIF
+;
+	IF	FN3
+	ENTRY	CPMF3
+CPMF3:	MVI	C,3
+	JMP	GOTOB
+	ENDIF
+;
+	IF	FN4
+	ENTRY	CPMF4
+CPMF4:	MVI	C,4
+	JMP	GOTOC
+	ENDIF
+;
+	IF	FN5
+	ENTRY	CPMF5
+CPMF5:	MVI	C,5
+	JMP	GOTOC
+	ENDIF
+;
+	IF	FN6
+	ENTRY	CPMF6
+CPMF6:	MVI	C,6
+	JMP	GOTOD
+	ENDIF
+;
+	IF	FN7
+	ENTRY	CPMF7
+CPMF7:	MVI	C,7
+	JMP	GOTOB
+	ENDIF
+;
+	IF	FN8
+	ENTRY	CPMF8
+CPMF8:	MVI	C,8
+	JMP	GOTOC
+	ENDIF
+;
+	IF	FN9
+	ENTRY	CPMF9
+CPMF9:	MVI	C,9
+	JMP	GOTOE
+	ENDIF
+;
+	IF	FN10
+	ENTRY	CPMF10
+CPMF10:	MVI	C,10
+	JMP	GOTOE
+	ENDIF
+;
+	IF	FN11
+	ENTRY	CPMF11
+CPMF11:	MVI	C,11
+	JMP	GOTOB
+	ENDIF
+;
+	IF	FN12
+	ENTRY	CPMF12
+CPMF12:	MVI	C,12
+	JMP	GOTOH
+	ENDIF
+;
+	IF	FN13
+	ENTRY	CPMF13
+CPMF13:	MVI	C,13
+	JMP	GOTOA
+	ENDIF
+;
+	IF	FN14
+	ENTRY	CPMF14
+CPMF14:	MVI	C,14
+	JMP	GOTOC
+	ENDIF
+;
+	IF	FN15
+	ENTRY	CPMF15
+CPMF15:	MVI	C,15
+	JMP	GOTOF
+	ENDIF
+;
+	IF	FN16
+	ENTRY	CPMF16
+CPMF16:	MVI	C,16
+	JMP	GOTOF
+	ENDIF
+;
+	IF	FN17
+	ENTRY	CPMF17
+CPMF17:	MVI	C,17
+	JMP	GOTOF
+	ENDIF
+;
+	IF	FN18
+	ENTRY	CPMF18
+CPMF18:	MVI	C,18
+	JMP	GOTOB
+	ENDIF
+;
+	IF	FN19
+	ENTRY	CPMF19
+CPMF19:	MVI	C,19
+	JMP	GOTOF
+	ENDIF
+;
+	IF	FN20
+	ENTRY	CPMF20
+CPMF20:	MVI	C,20
+	JMP	GOTOF
+	ENDIF
+;
+	IF	FN21
+	ENTRY	CPMF21
+CPMF21:	MVI	C,21
+	JMP	GOTOF
+	ENDIF
+;
+	IF	FN22
+	ENTRY	CPMF22
+CPMF22:	MVI	C,22
+	JMP	GOTOF
+	ENDIF
+;
+	IF	FN23
+	ENTRY	CPMF23
+CPMF23:	MVI	C,23
+	JMP	GOTOF
+	ENDIF
+;
+	IF	FN24
+	ENTRY	CPMF24
+CPMF24:	MVI	C,24
+	JMP	GOTOH
+	ENDIF
+;
+	IF	FN25
+	ENTRY	CPMF25
+CPMF25:	MVI	C,25
+	JMP	GOTOB
+	ENDIF
+;
+	IF	FN26
+	ENTRY	CPMF26
+CPMF26:	MVI	C,26
+	JMP	GOTOE
+	ENDIF
+;
+	IF	FN27
+	ENTRY	CPMF27
+CPMF27:	MVI	C,27
+	JMP	GOTOI
+	ENDIF
+;
+	IF	FN28
+	ENTRY	CPMF28
+CPMF28:	MVI	C,28
+	JMP	GOTOA
+	ENDIF
+;
+	IF	FN29
+	ENTRY	CPMF29
+CPMF29:	MVI	C,29
+	JMP	GOTOH
+	ENDIF
+;
+	IF	FN30
+	ENTRY	CPMF30
+CPMF30:	MVI	C,30
+	JMP	GOTOF
+	ENDIF
+;
+	IF	FN31
+	ENTRY	CPMF31
+CPMF31:	MVI	C,31
+	JMP	GOTOI
+	ENDIF
+;
+	IF	FN32
+	ENTRY	CPMF32
+CPMF32:	MVI	C,32
+	JMP	GOTOD
+	ENDIF
+;
+	IF	FN33
+	ENTRY	CPMF33
+CPMF33:	MVI	C,33
+	JMP	GOTOF
+	ENDIF
+;
+	IF	FN34
+	ENTRY	CPMF34
+CPMF34:	MVI	C,34
+	JMP	GOTOF
+	ENDIF
+;
+	IF	FN35
+	ENTRY	CPMF35
+CPMF35:	MVI	C,35
+	JMP	GOTOE
+	ENDIF
+;
+	IF	FN36
+	ENTRY	CPMF36
+CPMF36:	MVI	C,36
+	JMP	GOTOE
+	ENDIF
+;
+	IF	FN37
+	ENTRY	CPMF37
+CPMF37:	MVI	C,37
+	JMP	GOTOG
+	ENDIF
+;
+	IF	FN38
+	.PRINTX /ERROR --- Function 38 is not defined in BDOS./
+	ENDIF
+;
+	IF	FN39
+	.PRINTX /ERROR --- Function 39 is not defined in BDOS./
+	ENDIF
+;
+	IF	FN40
+	ENTRY	CPMF40
+CPMF40:	MVI	C,40
+	JMP	GOTOF
+	ENDIF
+;
+	PAGE
+	IF	CLASSA
+;
+;			CLASS  A
+;			--------
+;
+;	Arguments	FORTRAN				BDOS
+;	(none)
+;
+GOTOA:	CALL	BDOS
+	RET
+	ENDIF
+	PAGE
+	IF	CLASSB
+;
+;			CLASS  B
+;			--------
+;
+;	Arguments	FORTRAN				BDOS
+;    P1 (1-byte out)	address of P1 in HL		value of P1 in A
+;
+GOTOB:	SHLD	P1	;save address of param 1
+	CALL	BDOS
+	LHLD	P1	;restore address of param 1
+	MOV	M,A	;	and move returned value to it
+	RET
+	ENDIF
+	PAGE
+	IF	CLASSC
+;
+;			CLASS  C
+;			--------
+;
+;	Arguments	FORTRAN				BDOS
+;    P1 (1-byte in)	address of P1 in HL		value of P1 in E
+;
+GOTOC:	SHLD	P1	;save address of param 1
+	MOV	E,M	;	and move contents to E
+	CALL	BDOS
+	LHLD	P1	;restore address of param 1
+	RET
+	ENDIF
+	PAGE
+	IF	CLASSD
+;
+;			CLASS  D
+;			--------
+;
+;	Arguments	FORTRAN				BDOS
+;    P1 (1-byte in)	address of P1 in HL		value of P1 in E
+;    P2 (1-byte out)	address of P2 in DE		value of P2 in A
+;
+GOTOD:	SHLD	P1	;save address of param 1
+	XCHG		;	and swap
+	SHLD	P2	;save address of param 2
+	XCHG		;	and swap back
+	MOV	E,M	;	and move contents to E
+	CALL BDOS
+	LHLD	P2	;restore param 2 to HL
+	MOV	M,A	;	move returned value to it
+	XCHG		;	and swap back to DE
+	LHLD	P1	;restore param 1 to HL
+	RET
+	ENDIF
+	PAGE
+	IF	CLASSE
+;
+;			CLASS  E
+;			--------
+;
+;	Arguments	FORTRAN				BDOS
+;    P1 (address in)	address of P1 in HL		address of P1 in DE
+;
+GOTOE:	SHLD	P1	;save param 1
+	XCHG		;	and move to DE for BDOS
+	CALL	BDOS
+	LHLD	P1	;restore param 1
+	RET
+	ENDIF
+	PAGE
+	IF	CLASSF
+;
+;			CLASS  F
+;			--------
+;
+;	Arguments	FORTRAN				BDOS
+;    P1 (address in)	address of P1 in HL		address of P1 in DE
+;    P2 (1-byte out)	address of P2 in DE		value of P2 in A
+;
+GOTOF:	SHLD	P1	;save param 1
+	XCHG		;	and swap params (ok for BDOS, too)
+	SHLD	P2	;save address of param 2
+	CALL BDOS
+	LHLD	P2	;restore address of param 2
+	MOV	M,A	;	move returned value to it
+	XCHG		;	and return to DE
+	LHLD	P1	;restore param 1
+	RET
+	ENDIF
+	PAGE
+	IF	CLASSG
+;
+;			CLASS  G
+;			--------
+;
+;	Arguments	FORTRAN				BDOS
+;    P1 (2-byte in)	address of P1 in HL		value of P1 in DE
+;    P2 (1-byte out)	address of P2 in DE		value of P2 in A
+;
+GOTOG:	SHLD	P1	;save address of param 1
+	XCHG		;	and swap params
+	SHLD	P2	;save address of param 2
+	XCHG		;	and restore original order
+	MOV	E,M	;transfer 2-byte data in
+	INX	H	;	param 1 into
+	MOV	D,M	;	reg. pair DE
+	CALL	BDOS
+	LHLD	P2	;restore param 2 to HL
+	MOV	M,A	;	move returned value to it
+	XCHG		;	and return to DE
+	LHLD	P1	;restore param 1 to HL
+	RET
+	ENDIF
+	PAGE
+	IF	CLASSH
+;
+;			CLASS  H
+;			--------
+;
+;	Arguments	FORTRAN				BDOS
+;    P1 (address out)	address of P1 in HL		2-byte value in HL
+;
+GOTOH:	SHLD	P1	;save address of P1
+	CALL	BDOS
+	XCHG		;swap HL to DE
+	LHLD	P1	;	and restore param 1 address
+	MOV	M,E	;then, transfer DE contents to
+	INX	H	;	memory at P1 and P1+1
+	MOV	M,D
+	DCX	H
+	RET
+	ENDIF
+	PAGE
+	IF	CLASSI
+;
+;			CLASS  I
+;			--------
+;
+;
+	.PRINTX /WARNING -- CLASS I code not implemented yet./
+	ENDIF
+	PAGE
+; * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+;
+;	Define temporary variables
+;
+	IF	MAKEP1
+P1:	DS	2
+	ENDIF
+	IF	MAKEP2
+P2:	DS	2
+	ENDIF
+	END
