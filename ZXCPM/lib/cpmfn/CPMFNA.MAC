@@ -1,0 +1,100 @@
+;
+;	CPMFNA
+;
+;	CP/M Command Line - interface routine
+;
+;
+;	Originally written:  November, 1981
+;
+;	Pre-release modifications:
+;	(none)
+;
+;	Released to CP/M User's Group as:
+;	Version 1.0
+;	January 12, 1982
+;
+;	Author: William R. Brandoni
+;
+;	Language: Microsoft M80 (MACRO-80 assembler) Version 3.4 (26-Nov-80)
+;
+;
+;	See the "User-Defined Equates" section for modifications
+;	you may have to make to reassemble this file.
+;
+; * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+;
+;	This file is an interface for
+;	extracting the "Command Line Tail" from
+;	the CP/M operating system.
+;
+;	The main reason for its existance is to provide
+;	an interface between Microsoft FORTRAN-80 and
+;	the command line, as a means to pass input to
+;	a FORTRAN program at the command level.
+;
+;	This file is intended as support to Microsoft FORTRAN
+;	subroutines which in turn provide all of the
+;	interfacing and setup functions prior to calling
+;	this subroutine.
+;
+;	Arguments are assumed to be passed into this routine
+;	in Microsoft format (ie. all arguments passed as addresses).
+;
+; * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+;
+;	For an explanation of the command line processing, see
+;	the "CP/M 2.0 INTERFACE GUIDE" (c) 1979 by Digital
+;	Research
+;
+; * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+	PAGE
+; * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+;
+;	User-Defined Equates
+;
+;
+;	Define base of CP/M (std version is 0000H)
+;
+;
+	BASE	EQU	6000H	;<--- set to base of your CP/M
+;
+; * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+;
+;	Miscellaneous Equates
+;
+	CMDLIN	EQU	BASE+0080H
+;
+; * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+	PAGE
+; * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+;
+;
+;	Arguments	FORTRAN
+;    P1 (address in)	address of P1 in HL
+;
+	ENTRY	CPMFNA
+CPMFNA:	SHLD	P1		;Store param 1 and leave in <HL>
+	LXI	D,CMDLIN	;Load address of command line in <DE>
+	LDAX	D		;Get first byte (=no of bytes left)
+	MOV	M,A		;	store in param 1
+				;	and leave in A as a counter
+	MVI	B,0		;Set up B as loop counter
+LOOP:	CMP	B		;"Are we done?"
+	JZ	EXIT
+	INR	B		;Increment counter
+	INX	D		;Increment command line address
+	INX	H		;Increment param 1 address
+	MOV	C,A		;Save loop counter
+	LDAX	D		;Get next byte of line
+	MOV	M,A		;	store in param 1
+	MOV	A,C		;Restore loop counter
+	JMP	LOOP		;	and try again
+EXIT:	LHLD	P1		;Restore original P1 address
+	RET			;	and return
+;
+; * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+;
+;	Define temporary storage
+;
+P1:	DS	2
+	END
