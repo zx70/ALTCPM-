@@ -1,7 +1,9 @@
 ZXCPM related tools (cross development, disk editing, etc)
 
 
-Cross development compiler kit:
+Cross development compiler kit
+(patched to run on a normal CP/M
+   emulator or cross environment)
 ----------------------------------
 
 The BASIC Compiler is an exact conversion of an early version, all the original functionalities (and limits) should match.
