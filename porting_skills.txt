@@ -1,0 +1,150 @@
+SKILL: ALTCPM PORTING ANALYZER
+VERSION: 0.3
+
+PURPOSE
+-------
+
+Analyze CP/M assembly source code and identify modifications required
+to port software from standard CP/M (BASE=0000h) to ALTCPM
+(BASE=4200h).
+
+This skill does NOT automatically modify source code.
+
+Its purpose is to classify findings as:
+
+  [OK]      Definite conversion
+  [CHECK]   Requires verification
+  [WARN]    Potential problem
+  [INFO]    Useful information
+
+
+FUNDAMENTAL CONCEPTS
+--------------------
+
+Standard CP/M:
+
+  BOOT   = 0000h
+  BDOS   = 0005h
+  FCB1   = 005Ch
+  FCB2   = 006Ch
+  DMA    = 0080h
+  TPA    = 0100h
+
+ALTCPM:
+
+  BOOT   = 4200h
+  BDOS   = 4205h
+  FCB1   = 425Ch
+  FCB2   = 426Ch
+  DMA    = 4280h
+  TPA    = 4300h
+
+General rule:
+
+  new_address = old_address + 4200h
+
+
+------------------------------------------------------------------
+
+RULE A1 - SYMBOLIC ZERO PAGE
+----------------------------
+
+Pattern:
+
+  BOOT EQU 0000H
+  BDOS EQU 0005H
+  FCB1 EQU 005CH
+  ...
+
+and subsequent symbolic usage:
+
+  CALL BDOS
+  JP BOOT
+  LD A,(FCB1)
+
+Action:
+
+  Update only the EQU definitions.
+
+Classification:
+
+  [OK]
+
+
+------------------------------------------------------------------
+
+RULE A2 - CONSTANT OFFSET TRANSLATION
+-------------------------------------
+
+Verify that CP/M system addresses have been translated
+by +4200h.
+
+Examples:
+
+  0000h -> 4200h
+  0005h -> 4205h
+  005Ch -> 425Ch
+  0080h -> 4280h
+  0100h -> 4300h
+
+Classification:
+
+  [OK]
+
+
+------------------------------------------------------------------
+
+RULE A3 - PARAMETERIZED ZERO PAGE
+---------------------------------
+
+Pattern:
+
+  BASE EQU xxxxH
+
+  WBOOT EQU BASE+0000H
+  BDOS  EQU BASE+0005H
+  FCB   EQU BASE+005CH
+  DMA   EQU BASE+0080H
+  TPA   EQU BASE+0100H
+
+Example:
+
+  BASE EQU 6000H
+
+  WBOOT EQU BASE+0000H
+  BDOS  EQU BASE+0005H
+  TPA   EQU BASE+0100H
+
+Action:
+
+  No action required.
+
+The source is already rebase-friendly.
+
+Classification:
+
+  [OK]
+
+
+------------------------------------------------------------------
+
+RULE B1 - HARD-CODED ABSOLUTE SYSTEM ADDRESSES
+----------------------------------------------
+
+Search for direct references to:
+
+  0000h    WBOOT entry point
+  0001h    WBOOT vector address byte
+  0002h    WBOOT vector address byte
+  0003h    IOBYTE
+  0004h    Current/default disk
+  0005h    BDOS entry point
+  0006h    BDOS vector low byte
+  0007h    BDOS vector high byte
+
+  005Ch    Default FCB #1
+  006Ch    Default FCB #2
+  0080h    Default DMA buffer / command tail
+
+
+  
