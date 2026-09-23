@@ -1,0 +1,5 @@
+Microsoft BASIC 5.22 probably never existed on ALTCPM,
+the actual version is a modern, bugfixed rebuild with
+the maximum possible compatibility (support for old
+cp/m versions and 8080 CPU).
+
