@@ -5,7 +5,7 @@ It starts with a configure tool, you can personalize it before adding your files
 
    cpmtools\cpmcp -f h8d cpm14.h8d files\*.* 0:
 
-------------------------------------------------------
+----------------------------------------
 CPMTOOLS diskdefs
 
 # Heath Zenith H8 / H89
@@ -19,4 +19,5 @@ diskdef h8d
    boottrk 3
    os 2.2
  end
-------------------------------------------------------
+----------------------------------------
+
