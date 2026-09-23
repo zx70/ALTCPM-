@@ -9,7 +9,7 @@ This is sample procedure to use CPMTOOLS to create a bootable disk image with yo
     copy /B cpm.sys+cpm14_body.raw cpm14.raw /y
     msdos bin2imd cpm14.raw cpm14.imd cpm14.b2i
 
-.. the FMG or the Lifeboat core can be used for CPM.SYS
+.. the FMG (fmg_boot.raw) or the Lifeboat (cpm14_boot.raw) core can be copied to CPM.SYS
 
 --------------------------------
 
