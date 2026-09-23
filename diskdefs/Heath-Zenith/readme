@@ -1,7 +1,8 @@
 Heath H8, Heath H89, Zenith Z89
 
 This is a naked boot system image.
-It starts with a configure tool, you can personalize it before adding your files (or leave it alone).
+It starts with a configure tool, you can personalize it
+before adding your files (or leave it alone).
 
    cpmtools\cpmcp -f h8d cpm14.h8d files\*.* 0:
 
