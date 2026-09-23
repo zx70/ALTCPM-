@@ -2,4 +2,4 @@ Games built for ALTCPM (TPA at 4300h)
 
 .cpm files must be renamed to .com
 
-sargon chess requires a Z80 CPU (no Alphatronic, sorry)
+sargon chess requires a Z80 CPU (won't run on Alphatronic, sorry)
