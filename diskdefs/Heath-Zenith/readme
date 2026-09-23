@@ -5,3 +5,18 @@ It starts with a configure tool, you can personalize it before adding your files
 
    cpmtools\cpmcp -f h8d cpm14.h8d files\*.* 0:
 
+------------------------------------------------------
+CPMTOOLS diskdefs
+
+# Heath Zenith H8 / H89
+diskdef h8d
+   seclen 256
+   tracks 40
+   sectrk 10
+   blocksize 1024
+   maxdir 32
+   skew 4
+   boottrk 3
+   os 2.2
+ end
+------------------------------------------------------
