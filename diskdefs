@@ -1,6 +1,0 @@
-This section contains the procedures and the elements to build special disk images.
-Since CP/M 1.4 required a specific sector geometry, the first sectors were ROM compatible to load the Operating System (thus, the monolithic block including BIOS, BDOS and CCP).
-When the BIOS is activated, it uses its own disk access routines.
-
-This means that the resulting disk image is hard to edit with disk image editors, it is preferrable to keep the two sections parted.
-IMAGEDISK by Dunfield helps to wrap-up the final disk image in the last stage.
