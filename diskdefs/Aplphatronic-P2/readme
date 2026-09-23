@@ -1,0 +1,37 @@
+Triumph Adler Alphatronic P2, ITT 3030, SKS KISS
+
+(NOTE: the dissected disk image is not strictly necessary here)
+
+This is sample procedure to use CPMTOOLS to create a bootable disk image with your own files
+(an MS-DOS emulator is required to run bin2imd)
+
+    copy /B ta-p2_bios.raw+ta-p2_body.raw test.raw /y
+    \cpmtools\cpmcp -f tap2 test.raw %1 0:
+    msdos bin2imd test.raw test.imd cpm22.b2i
+
+--------------------------------
+
+CPMTOOLS DISKDEFS:
+
+# Triumph-Adler P2
+# (Same geometry of NEC PC-6001/6601)
+
+diskdef tap2
+  seclen 256
+  tracks 40
+  sectrk 16
+  blocksize 1024
+  maxdir 64
+  skew 0
+  boottrk 2
+  os 2.2
+end
+
+
+--------------------------------
+
+CPM22.B2I
+
+0  N=40  DM=5  SS=256 SM=1-16 /1
+
+--------------------------------
