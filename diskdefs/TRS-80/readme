@@ -1,0 +1,38 @@
+TRS-80 Model I
+Two ALTCPM variants of CP/M 1.4 esisted, Lifefoat and FMG (v1.4 and 1.5)
+
+This is sample procedure to use CPMTOOLS to create a bootable disk image with your own files
+(an MS-DOS emulator is required to run bin2imd)
+
+    copy cpm14_empty_body.raw cpm14_body.raw /y
+    \cpmtools\cpmcp -f trs1 cpm14_body.raw files\*.* 0:
+    copy /B cpm.sys+cpm14_body.raw cpm14.raw /y
+    msdos bin2imd cpm14.raw cpm14.imd cpm14.b2i
+
+.. the FMG or the Lifeboat core can be used for CPM.SYS
+
+--------------------------------
+
+CPMTOOLS DISKDEFS:
+
+# TRS80 Model I (ripped header)
+diskdef trs1
+  seclen 128
+  tracks 35
+  sectrk 18
+  blocksize 1024
+  maxdir 64
+  skew 4
+  boottrk 0
+  os 2.2
+end
+
+--------------------------------
+
+CPM14.B2I
+
+0  N=35  DM=2  SS=256 SM=0-9 /1
+3  DM=2 SS=128 SM=1-18 /1
+
+--------------------------------
+
