@@ -1,8 +1,12 @@
 ZXCPM related tools (cross development, disk editing, etc)
 
+
 Cross development compiler kit:
 ----------------------------------
-The BASIC Compiler is an exact conversion of an early version, all the original functionalities (and limits) should match 
+
+The BASIC Compiler is an exact conversion of an early version, all the original functionalities (and limits) should match.
+
 The Fortran-80 compiler is a hack.
+
 The BDS C compiler is the recent v1.6 as originally built by Kamil, with some more file taken from the original BDS package.
 
