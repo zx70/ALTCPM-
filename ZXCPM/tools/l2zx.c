@@ -5,8 +5,7 @@
    in a cross-development environment (a standard CP/M system).
 
    Currently it is capable of linking small programs only, (OTHELLO will fail, in example)
- 
-   
+
 
     ********
 	* L2.C *	New linker for BDS C
@@ -475,15 +474,6 @@ readprog (mainp)			/* read in a program file */
 readobj (len)			/* read in an object (program or lib funct) */
 	unsigned len;
 {
-
-printf(
-    "READOBJ len=%u codend=%04X lspcend=%04X remain=%u\n",
-    len,
-    codend.u,
-    (unsigned)lspcend,
-    (unsigned)(lspcend - codend.b)
-);
-
 	if (phase == DISK1  ||  codend.b + len >= lspcend) {
 		if (phase == INMEM) {
 			puts("\n** Out of memory--switching to disk mode **\n");
@@ -919,4 +909,3 @@ lexit (status)				/* exit the program */
 
 
 /* END OF L2.C */
-
