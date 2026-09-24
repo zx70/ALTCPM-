@@ -1,3 +1,5 @@
 ALTCPM and ZXCPM related tools
 
-The kits require a command line CP/M emulator and the z88dk/support/rel/rebase.c program.
+The kits require a command line CP/M emulator.
+
+BASCOM-ALTCPM-XDEV.ZIP works also in ZXBASIC mode but needs the z88dk/support/rel/rebase.c program.
