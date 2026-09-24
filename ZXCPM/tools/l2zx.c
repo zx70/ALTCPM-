@@ -1,6 +1,6 @@
 /*
 
-   This version has been manipulated to worh with the ZXCPM version of the BDS C
+   This version has been manipulated to work with the ZXCPM version of the BDS C
    It requires a standard BDS C  v1.6 compiler to be built and will work only
    in a cross-development environment (a standard CP/M system).
 
