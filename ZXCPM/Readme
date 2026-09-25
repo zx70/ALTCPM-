@@ -2,6 +2,8 @@ The ZXCPM has the TPA address at 6100h.
 It is a freeware variant shared in 2003 by Kamil Karimov, derived from the Quorum CP/M
 
 
+diskdefs configuration for cpmtools 
+
 # ZX 128 + BETADISK (= QUORUM, KLUG etc..)
 diskdef quorum
   seclen 1024
