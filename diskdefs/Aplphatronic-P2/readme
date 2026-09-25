@@ -1,8 +1,11 @@
 Triumph Adler Alphatronic P2, ITT 3030, SKS KISS
 
-(NOTE: the dissected disk image is not strictly necessary here, with some cpmtools version it is possible to edit directly an IMD disk image).
+(NOTE: the dissected disk image is not strictly 
+necessary here, with some cpmtools version it is
+possible to edit directly an IMD disk image).
 
-This is sample procedure to use CPMTOOLS to create a bootable disk image with your own files
+This is sample procedure to use CPMTOOLS to create 
+a bootable disk image with your own files
 (an MS-DOS emulator is required to run bin2imd)
 
     copy /B ta-p2_bios.raw+ta-p2_body.raw test.raw /y
