@@ -1,3 +1,12 @@
 Historical games for the Heath/Zenith H89.
 The disk image should run on ANY H8 or H89
 (no memory mapper required)
+
+
+RALLY
+=====
+Set your direction with the numeric keypad, repeated key presses increase (or decrease)
+the steering angle or the speed.
+See the comment on top of the source file for command line options.
+
+
