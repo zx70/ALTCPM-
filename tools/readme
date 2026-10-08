@@ -3,3 +3,7 @@ ALTCPM and ZXCPM related tools
 The kits require a command line CP/M emulator.
 
 BASCOM-ALTCPM-XDEV.ZIP works also in ZXBASIC mode but needs the z88dk/support/rel/rebase.c program.
+
+The BDS C kit is a beefed setup built around the original ALTCPM base libraries and compiler. 
+It should, at some extent, permit to build historical program which hardly could be built natively
+on an ALTCPM system.  This BDS C library version should be compatible with CP/M 1.4
