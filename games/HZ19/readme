@@ -1,6 +1,6 @@
 Historical games for the Heath/Zenith H89.
-The disk image should run on ANY H8 or H89
-(no memory mapper required)
+
+The disk image should run on ANY H8 or H89 (no memory mapper required)
 
 
 POLISH PONG
@@ -25,6 +25,7 @@ RALLY
 Set your direction with the numeric keypad, repeated key presses increase 
 (or decrease) the steering angle or the speed.
 See the comment on top of the source file for command line options.
+
 
 
 
@@ -73,3 +74,7 @@ Rules of the game:
 	Less stones make it somewhat easier (for both you
 	AND the computer), while more stones complicate
 	the game.
+
+
+(BUGS and FLYBY are not real games, they are just animations)
+
