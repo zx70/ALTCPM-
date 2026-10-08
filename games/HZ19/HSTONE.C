@@ -1,7 +1,7 @@
 /*
-    ===
+      ===
 	"STONE" --- H19  Version (for H19/Z19/H89/Z89 ONLY)
-    ===
+      ===
 
 	(otherwise known as "Awari")
 
