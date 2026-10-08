@@ -3,10 +3,73 @@ The disk image should run on ANY H8 or H89
 (no memory mapper required)
 
 
+POLISH PONG
+===========
+Object is to guide the little ball around the screen by setting up
+and removing blockade sections. All control is via the keypad; "4"
+and "6" cause blockades to be formed at the current position of the
+roving ball, while pressing "5" at the exact moment the ball hits a
+blockade should make that blockade disappear. Oh yes, and the POINT
+of all this is to make the ball hit the little square target--once
+this is done, the square will disappear and reappear somewhere else,
+to be hit again. Go for hitting the target the specified number of
+times AS QUICKLY AS POSSIBLE. Your score is how many seconds you
+took; the lower the better.
+Keys "8" and "2" speed up and slow down the ball; as you get better,
+try it at a faster speed!
+
+
+
 RALLY
 =====
-Set your direction with the numeric keypad, repeated key presses increase (or decrease)
-the steering angle or the speed.
+Set your direction with the numeric keypad, repeated key presses increase 
+(or decrease) the steering angle or the speed.
 See the comment on top of the source file for command line options.
 
 
+
+STONE
+=====
+
+(otherwise known as "Awari")
+
+Rules of the game:
+
+	Each player has six pits in front of him and a
+	"home" pit on one side (the computer's home pit
+	is on the left; your home pit is on the right.)
+
+	At the start of the game, all pits except the home
+	pits are filled with n stones, where n can be anything
+	from 1 to 6.
+
+	To make a move, a player picks one of the six pits
+	on his side of the board that has stones in it, and
+	redistributes the stones one-by-one going counter-
+	clockwise around the board, starting with the pit
+	following the one picked. The opponent's HOME pit is
+	never deposited into.
+
+	If the LAST stone happens to fall in that player's
+	home pit, he moves again.
+
+	If the LAST stone falls into an empty pit on the
+	moving player's side of  board, then any stones in the
+	pit OPPOSITE to that go into the moving
+	player's home pit.
+
+	When either player clears the six pits on his
+	side of the board, the game is over. The other player
+	takes all stones in his six pits and places them in
+	his home pit. Then, the player with the most stones
+	in his home pit is the winner.
+
+	The six pits on the human side are numbered one
+	to six from left to right; the six pits on the	
+	computer's side are numbered one to six right-to-
+	left.
+
+	The standard game seems to be with three stones;
+	Less stones make it somewhat easier (for both you
+	AND the computer), while more stones complicate
+	the game.
