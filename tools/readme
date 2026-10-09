@@ -12,3 +12,8 @@ with CP/M 1.4
 biosh.asm and cfsize.asm are backports of BDS C functions borrowed from later compiler versions.
 l2.c is the source code of a manipulated ALTCPM version of the Mark of the Unicorn linker,
 it is much more verbose than the original one, today it is easier to keep the console output history !
+Usually you won't need those extra files, they are already present in built form in ALTCPM-BDSC-XDEV-v3.ZIP
+The refreshed dio.c version, in turn, is optional but it is highly recommended to check it in case
+of odd console output behaviors.  Remember that, if used, it must stay on top (just specify dio.crl in the
+linker command line).
+
