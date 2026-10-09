@@ -8,3 +8,7 @@ The BDS C kit is a beefed setup built around the original ALTCPM base libraries 
 It should, at some extent, permit to build historical programs which hardly could be built natively
 on an ALTCPM system. Also the library is slightly extended, still trying to keep it compatible 
 with CP/M 1.4
+
+biosh.asm and cfsize.asm are backports of BDS C functions borrowed from later compiler versions.
+l2.c is the source code of a manipulated ALTCPM version of the Mark of the Unicorn linker,
+it is much more verbose than the original one, today it is easier to keep the console output history !
