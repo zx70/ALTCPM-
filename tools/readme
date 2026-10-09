@@ -1,12 +1,11 @@
 ALTCPM and ZXCPM related tools
-
+________
 The kits require a command line CP/M emulator.
 
-
+________
 BASCOM-ALTCPM-XDEV.ZIP works also in ZXBASIC mode but needs the z88dk/support/rel/rebase.c program.
 
-
-
+________
 The BDS C kit is a beefed setup built around the original ALTCPM base libraries and compiler
 (Beware it is previous to version 1.5, the later versions are slightly different).
 It should, at some extent, permit to build historical programs which hardly could be built natively
@@ -18,6 +17,7 @@ l2.c is the source code of a manipulated ALTCPM version of the Mark of the Unico
 it is much more verbose than the original one, today it is easier to keep the console output history !
 Usually you won't need those extra files, they are already present in built form in ALTCPM-BDSC-XDEV-v3.ZIP
 
-The refreshed dio.c version, in turn, is optional but highly recommended in case of odd console output behaviors.
+The refreshed DIO.H & DIO.CRL files, in turn, are optional but highly recommended in case of odd console output behaviors.
+Many files in the "programs" section were built with this hacked variant.
 Remember that, if used, dio.crl must stay on top (you should specify dio.crl as the first library in the linker command line).
 
