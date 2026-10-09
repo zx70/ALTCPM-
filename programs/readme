@@ -1,2 +1,3 @@
 Microsoft BASIC 5.22 probably never existed on ALTCPM, the actual version is a modern, bugfixed rebuild with the maximum possible compatibility (support for old cp/m versions and 8080 CPU).
 
+The text manipulation tools MUST be used only on files with a proper EOF termination in order to work properly, the modern command line emulations could work incorrectly.
