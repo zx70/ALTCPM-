@@ -1,17 +1,5 @@
 /*
-
-  THIS VERSION HAS BEEN MODIFIED FOR DIRECT BIOS CALLS IN THE CONSOLE OUTPUT CODE
-  IT SHOWED TO BE A VALID WORKAROUND IN SEVERAL CASES
-  DIO.CRL AND BIOSH.CRL MUST BE SPECIFIED ON TOP OF THE LINKER COMMAND LINE
-  WHEN BUILDING YOUR PROGRAM
-
-  To build, just overwrite the existing "dio.c" file and type:
-    >cpm cc dio.c
-    >cpm c2 dio.c
-
-======================================================================
-
-  Directed I/O package for BDS C v1.45   LZ -- 12/81
+	Directed I/O package for BDS C v1.45   LZ -- 12/81
 
 	The following functions make up the directed I/O library:
 
@@ -316,13 +304,13 @@ char c;
 	/* if (bdos(CON_STATUS) && bdos(CON_INPUT) == CONTROL_C) exit();
 	if (c == '\n') bdos(CON_OUTPUT,'\r');
 	bdos(CON_OUTPUT,c); */
-
+/*
 	if (biosh(BIOS_CONST,0))
 	{
-		if (biosh(BIOS_CONIN,0) == CONTROL_C)
+		if (biosh(BIOS_CONIN,0) == 3)
 			exit();
 	}
-
+*/
 	if (c == '\n')
 		biosh(BIOS_CONOUT,'\r');
 
