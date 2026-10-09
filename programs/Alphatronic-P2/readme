@@ -1,0 +1,3 @@
+The Triumph-Adler Alphatronic P2 is slighlty different, it had an 8085 CPU and the ALTCPM Was based on CP/M version 2.2.
+
+The DIO.C hack for BDS C doesn't work properly on it (it puts extra spaces on the console output).
