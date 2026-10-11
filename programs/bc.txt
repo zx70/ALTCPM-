@@ -1,0 +1,25 @@
+                          BC
+
+BC is a byproduct of an 8088/86 cross-assembler I am writing.
+It is a 16-bit Binary Calculator with some limitations.
+The expression analyzer, which is in BCANLYZ.C, is recursive,
+to handle almost any (practical) nesting of parentheses. 
+The operator precedence is strictly left to right, so
+use parentheses to get things done the way you want.
+
+Files needed:	BC.C       (main module)
+		BCANLYZ.C  (expression analyzer)
+		BCDEF.H    (external definitions)
+
+To compile:	CC BC.C
+		CC BCANLYZ.C
+		CLINK BC BCANLYZ
+
+Jan Larsson
+Kosterv. 12
+S-181 35 Lidingo
+SWEDEN
+
+---------------------------------------------------------------
+This file revised 26 Dec 83 by John M. Smith,
+CUG librarian for the Utilities IV library diskette.
