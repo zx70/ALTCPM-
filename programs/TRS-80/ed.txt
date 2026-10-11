@@ -1,0 +1,38 @@
+This is a fix for the LifeBoat CP/M 1.4, which isn't able to get CTRL+Z keypress, for ED.COM we need to use CTRL+_
+
+How to build using PLM80 on ISIS II:
+====================================
+
+  asm80 stub.asm
+  plm80 ed.plm
+  link ed.obj,stub.obj,plm80.obj to ed.mod
+  locate ed.mod code(4300h) stacksize(100)
+  objhex ed ed.hex
+  (cpm) mload ed.hex
+
+
+HOW TO WRAP-UP A DISK IMAGE
+===========================
+
+The raw disk format includes a first 7680 bytes section with the CP/M system
+(which can be copied from another disk) plus 73728 bytes more in the image file disk body.
+
+"cpmtools" can edit the "body" section before appending it to the boot sector:
+# TRS4 TRS-80, Lifeboat CP/M 1.4, FMG CP/M 1.5
+diskdef trs1
+ seclen 128
+ tracks 35
+ sectrk 18
+ blocksize 1024
+ maxdir 64
+ boottrk 0
+ skew 4
+ os 2.2
+end
+
+MSDOS way to merge the files into a final disk image:
+copy /B fmg_boot.raw+cpm15_body.raw cpm15.raw /y
+
+"b2i" format file for bin2imd:
+0  N=35  DM=2  SS=256 SM=0-9 /1
+3  DM=2 SS=128 SM=1-18 /1
