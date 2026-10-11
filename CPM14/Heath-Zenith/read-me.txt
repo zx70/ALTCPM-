@@ -1,0 +1,49 @@
+READ-ME for Heath CP/M Version 1.43
+As of February 16, 1980
+ 
+1. The file USER.ASM on this disk has been changed
+and improved from the printed listing in your USER NOTES.
+You may want to first assemble and print the current
+version by using the command "ASM USER.AZA" followed by
+the command "PIP LST:=USER.PRN" to send the .PRN file
+to your printer.
+ 
+2. The LIST devices (printers) implemented by this CP/M
+may be changed with the STAT command to any one of
+the following four built in devices:
+ 
+	a. TTY: stands for alternate terminal such as LA-36
+		or Diablo without handshaking.
+	b. CRT: stands for main console terminal.
+	c. LPT: stands for H-14 line printer.
+	d. UL1: stands for 1200 baud Diablo printer with
+		handshaking on same ports as TTY:.
+ 
+For example, to address a 1200 baud Diablo with handshaking
+the proper command would be: "STAT LST:=UL1:<CR>".
+ 
+To find out which devices are selected type the
+command "STAT DEV<CR>". To get a list of all possible
+devices that can be selected with the IOBYTE,
+type the command "STAT VAL<CR>".
+ 
+See the manual "Introduction to CP/M Features and Facilities"
+pages 13-22 for more information on the uses of STAT and PIP.
+ 
+3. The printer (and reader or punch) to be selected upon a cold boot
+may be changed by changing the value for the initial IOBYTE.
+This is picked up by the system from location 27F3 hex
+upon cold boot and stored at location 4203 hex
+where it is available for manipulation by programs
+such at STAT.COM, PIP.COM or a user program.
+ 
+For example, to permantly address
+the 1200 baud Diablo, the correct IOBYTE is 0C0 hex.
+This may be stored at 27F3 hex with DDT and then
+permanently saved on disk with SAVEUSER.COM.
+Each time the system is cold booted, the system
+will use the Diablo as the list device until the
+IOBYTE at 4203 hex is changed.
+ 
+See the manual "CP/M Alteration Guide" pages 15-16 for more
+information about the IOBYTE.
