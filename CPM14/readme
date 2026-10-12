@@ -1,7 +1,7 @@
-This folder contains the cp/m 1.4 files recovered from the original disk images. 
+This folder contains the CP/M 1.4 files recovered from the original disk images. 
 Minimal differences were ignored, in case of custom file markings etc, the generic file copy was chosen.
 
-Some of the TRS80 specific stuff was adjusted to work around the character set, OS specific versions have been renamed accordingly.
+Some of the TRS-80 specific stuff was adjusted to work around the character set, OS specific versions have been renamed accordingly.
 
 On the TRS80 Model I the FMG CP/M (v1.5) is a better choice than the LifeBoat CP/M, even the simple console interaction is more stable (CTRL-C is cumbersome, CTRL+Z is missing).
 By the way, 'ed_trs80_lifeboat_fix', is a modified version of ED.COM remapping CTRL+Z to CTRL+_
