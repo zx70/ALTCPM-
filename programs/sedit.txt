@@ -1,0 +1,118 @@
+
+This is a crazy ancient editor, gathered from an obscure BBS archive.
+The following instructions have been recreated by using an AI engine, I hardly believe the average CP/M user could guess how this editor was supposed to work !
+
+
+
+OVERVIEW
+--------
+This editor loads a text file into memory, allows line-oriented editing commands,
+and writes the modified text back to disk.
+
+STARTING THE EDITOR
+-------------------
+EDIT filename.ext
+
+If the file exists, it is opened.
+If it does not exist, a new file is created.
+
+COMMAND FORMAT
+--------------
+Commands are entered at the '*' prompt.
+Many commands accept an optional numeric prefix.
+Examples:
+
+5L      Move forward 5 lines
+3K      Delete 3 lines
+10T     Type 10 lines
+
+A minus sign reverses direction where applicable:
+
+-5L     Move backward 5 lines
+
+AVAILABLE COMMANDS
+------------------
+
+A  Append
+   Copy text from the input file into the editor buffer.
+
+B  Beginning
+   Move current pointer to the beginning of the text.
+
+C  Character move
+   Move the current pointer by N characters.
+
+D  Delete
+   Delete N characters.
+
+E  Exit and save
+   Write the edited file and terminate.
+
+F  Find
+   Search for a string.
+   Format:
+      Ftext<ESC>
+
+I  Insert
+   Insert text at the current position.
+   End insert text with ESC.
+
+K  Kill lines
+   Delete N lines.
+
+L  Line move
+   Move current position by N lines.
+
+N  Next occurrence
+   Continue searching for the next occurrence.
+
+Q  Quit
+   Abandon editing session.
+
+S  Substitute
+   Search and replace.
+   Format:
+      Sold text<ESC>new text<ESC>
+
+T  Type
+   Display N lines starting at current position.
+
+W  Write
+   Write N lines from the beginning of the buffer.
+
+Z  End
+   Move current pointer to end of text.
+
+SEARCH STRINGS
+--------------
+Strings are terminated by ESC.
+Within search strings:
+
+|  matches any character (wildcard)
+
+EXAMPLES
+--------
+FHELLO<ESC>
+    Find the next occurrence of HELLO.
+
+10T
+    Display 10 lines.
+
+5L
+    Move forward 5 lines.
+
+3K
+    Delete 3 lines.
+
+Z
+    Move to end of text.
+
+E
+    Save file and exit.
+
+NOTES
+-----
+The editor stores text in memory.
+The command buffer grows downward from the top of available RAM.
+The text buffer grows upward from the end of the program image.
+Editing ceases when the two buffers meet.
