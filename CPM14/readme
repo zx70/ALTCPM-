@@ -3,4 +3,8 @@ Minimal differences were ignored, in case of custom file markings etc, the gener
 
 Some of the TRS80 specific stuff was adjusted to work around the character set, OS specific versions have been renamed accordingly.
 
-'ed_trs80_lifeboat_fix' is a modified version of ED for the LifeBoat CP/M 1.4, which isn't able to get CTRL+Z keypress, it is remapped to work with CTRL+_
+On the TRS80 Model I the FMG CP/M (v1.5) is a better choice than the LifeBoat CP/M, even the simple console interaction is more stable (CTRL-C is cumbersome, CTRL+Z is missing).
+By the way, 'ed_trs80_lifeboat_fix', is a modified version of ED.COM remapping CTRL+Z to CTRL+_
+Analyze the 'STAT' commands with an hex editor for more information about the differences.
+
+
