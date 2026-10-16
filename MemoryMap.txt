@@ -1,0 +1,49 @@
+This are the vector entries (-> and subvector JPs) I've detected.
+
+CCP	BDOS	WBOOT	CPU	CP/M
+Alphatronic P2	E400	EC06->EC11	FA03->FABC	8085	2.2
+TRS-80 LifeBoat	E600	EE06->EE41	FB03->FB7C	Z80	1.4
+TRS-80 FMG 1.5	E800	F006->F041	FD03->FD4F	Z80	1.4
+H89 LifeBoat 1.43		9F00->2B06	9F03->2370	Z80	1.4
+
+In all those system, WBOOT is at 4200h, BDOS at 4305h, the command line input at 4280h, etc..
+
+the CCP should be 400h bytes long on both CP/M 2.2 and CP/M 1.4
+The BDOS portion is expected to be 256-bytes bigger on CP/M 2
+
+TRS80 Lifeboat BIOS entries (I confirm ROM calls are used in the code)
+FB31 BOOT
+FB7C WBOOT
+FC9B CONST
+FCBC CONIN
+FCF2 CONOUT
+FD29 LIST
+FDCE PUNCH
+FDCF READER
+FDD0 HOME
+FDEF SELDSK
+FE09 SETTRK
+FE0E SETSEC
+FE13 SETDMA
+FE19 READ
+FE1F WRITE
+
+
+H89 Lifeboat BIOS entries (in my understanding it is before the TPA)
+2353 BOOT
+2370 WBOOT
+2803 CONST
+2313 CONIN
+2329 CONOUT
+280C LIST
+280F PUNCH
+2812 READER
+23FA HOME
+23F5 SELDSK
+23FC SETTRK
+2401 SETSEC
+2406 SETDMA
+240C READ
+241D WRITE
+2815 ?
+24CD ?
