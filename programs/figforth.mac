@@ -4178,7 +4178,8 @@ VLIS2:  DW   DUP
         DW   VLIST-8
 BYE:    DW   $+2
 IF       KISS
-        JMP  0FA00H  ; CP/M Cold Boot
+        JMP  04200H  ; CP/M Cold Boot
+;        JMP  0FA00H  ; CP/M Cold Boot
 ENDIF
 IF       PC
          JMP    0000
