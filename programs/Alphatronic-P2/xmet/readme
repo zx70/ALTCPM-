@@ -1,2 +1,2 @@
 XMET is a cross-assembler for the 6800 CPU originally created for the HeathKit ET-3400 Microcomputer Learning System, or the HERO 1 (Heath ET-18) robot.
-It works as a preprocessor dealing with the bytecode assignments, but a further pass with any traditional assembler will be necessary.
+It works as a preprocessor dealing with the bytecode assignments, a further pass with any traditional assembler will be necessary to deal with the labels.
