@@ -1,4 +1,5 @@
 All the programs/languages/tools in this directory should run correctly on ALTCPM 1.4 and 2.2 (TPA at 4300h).
+Read the source program headers for the usage instructions.
 
 Microsoft BASIC 5.22 probably never existed on ALTCPM, the actual version is a modern, bugfixed rebuild with the maximum possible compatibility (support cp/m 1 and 2 and 8080 CPU).
 
