@@ -1,5 +1,5 @@
 SKILL: ALTCPM PORTING ANALYZER
-VERSION: 0.3
+VERSION: 0.4
 
 PURPOSE
 -------
@@ -128,6 +128,36 @@ Classification:
 
 ------------------------------------------------------------------
 
+RULE A4 - COM PROGRAM LOAD ADDRESS
+----------------------------------
+
+Pattern:
+
+  ORG 100H
+
+or explicit references to the CP/M TPA entry:
+
+  LXI H,100H
+  LXI D,100H
+  JMP 100H
+  CALL 100H
+
+Action:
+
+  Verify whether the reference represents
+  the CP/M COM load address.
+
+Typical conversion:
+
+  0100h -> 4300h
+
+Classification:
+
+  [OK]
+
+
+------------------------------------------------------------------
+
 RULE B1 - HARD-CODED ABSOLUTE SYSTEM ADDRESSES
 ----------------------------------------------
 
@@ -146,5 +176,248 @@ Search for direct references to:
   006Ch    Default FCB #2
   0080h    Default DMA buffer / command tail
 
+Classification:
 
-  
+  [OK]
+
+
+------------------------------------------------------------------
+
+RULE B2 - FCB INTERNAL FIELD ACCESS
+-----------------------------------
+
+Pattern:
+
+  Direct access inside default FCB areas:
+
+    005Dh-006Bh
+    006Dh-007Bh
+
+Examples:
+
+  LDA 65H
+  STA 67H
+  LHLD 70H
+
+Important:
+
+  Do NOT automatically translate these
+  addresses by +4200h.
+
+Some ALTCPM environments preserve CP/M-compatible
+access to default FCB contents at historical
+addresses.
+
+Action:
+
+  Manual verification required.
+
+Classification:
+
+  [CHECK]
+
+
+------------------------------------------------------------------
+
+RULE B3 - COMMAND TAIL AREA ACCESS
+----------------------------------
+
+Pattern:
+
+  Direct references in range:
+
+    0080h - 00FFh
+
+Examples:
+
+  LDA 80H
+  LDA 81H
+  STA 90H
+  LHLD 82H
+
+Notes:
+
+  The area may be used as:
+
+    - command tail
+    - default DMA buffer
+    - transient workspace
+
+Action:
+
+  Verify actual usage before conversion.
+
+Classification:
+
+  [CHECK]
+
+
+------------------------------------------------------------------
+
+RULE B4 - WARM BOOT TRANSFERS
+-----------------------------
+
+Pattern:
+
+  JMP 0
+  JMP 0000H
+  CALL 0
+  CALL 0000H
+
+Purpose:
+
+  Return to CP/M using the warm boot entry.
+
+Typical conversion:
+
+  0000h -> 4200h
+
+Examples:
+
+  JMP 0
+      becomes
+  JMP 4200H
+
+Classification:
+
+  [OK]
+
+
+------------------------------------------------------------------
+
+RULE B5 - TPA ADDRESS REFERENCES
+--------------------------------
+
+Pattern:
+
+  Direct references to:
+
+    0100h
+
+Examples:
+
+  LXI H,100H
+  SHLD STARTADR
+  CALL 100H
+
+Purpose:
+
+  Detect assumptions that a COM program
+  is loaded at the standard CP/M transient
+  program area.
+
+Typical conversion:
+
+  0100h -> 4300h
+
+Action:
+
+  Verify intent and convert when the address
+  represents the COM load location.
+
+Classification:
+
+  [CHECK]
+
+
+------------------------------------------------------------------
+
+RULE C1 - DEFAULT DMA ASSUMPTIONS
+---------------------------------
+
+Pattern:
+
+  BDOS file operations followed by direct
+  accesses to DMA memory.
+
+Examples:
+
+  MVI C,20
+  CALL BDOS
+
+  LXI D,80H
+
+or
+
+  MVI C,21
+  CALL BDOS
+
+  LXI H,80H
+
+Purpose:
+
+  Detect software relying on the default
+  DMA buffer location.
+
+Action:
+
+  Verify that DMA relocation to 4280h
+  is correctly handled.
+
+Classification:
+
+  [INFO]
+
+
+------------------------------------------------------------------
+
+RULE D1 - RET TO CP/M
+---------------------
+
+Pattern:
+
+  RET executed from a transient program
+  after restoring the original stack.
+
+Examples:
+
+  LHLD OLDSTK
+  SPHL
+  RET
+
+Purpose:
+
+  Standard CP/M applications frequently
+  terminate by returning through the CCP
+  entry stack frame.
+
+Action:
+
+  Usually no conversion required.
+
+Classification:
+
+  [INFO]
+
+
+------------------------------------------------------------------
+
+KNOWN VALID CONVERSIONS
+-----------------------
+
+Observed and validated in real ports:
+
+  BDOS EQU 5
+      -> BDOS EQU 4205H
+
+  ORG 100H
+      -> ORG 4300H
+
+  LXI D,5CH
+      -> LXI D,425CH
+
+  LXI D,80H
+      -> LXI D,4280H
+
+  LXI H,80H
+      -> LXI H,4280H
+
+  JMP 0
+      -> JMP 4200H
+
+  LXI H,100H
+      -> LXI H,4300H
+
+
+END OF SKILL
+``
