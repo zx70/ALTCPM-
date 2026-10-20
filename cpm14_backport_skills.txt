@@ -936,6 +936,24 @@ Classification:
   [CHECK]
 
 ------------------------------------------------------------------
+SECTION E - PORTING HINTS
+------------------------------------------------------------------
+
+The following suggestions are OPTIONAL.
+
+They shall be emitted only when a corresponding
+compatibility issue has already been detected.
+
+Porting hints must never be reported as warnings.
+
+Porting hints do not constitute compatibility
+findings by themselves.
+
+Classification:
+
+  [INFO]
+
+------------------------------------------------------------------
 RULE E1 - RUNTIME BDOS FUNCTION DISPATCH (HINT)
 -----------------------------------------------
 
@@ -1002,10 +1020,15 @@ Usage:
     MOV C,A
     CALL BDOS
 
+or
+
+    LDA CPMWRT
+    MOV C,A
+    CALL BDOS
+
 Classification:
 
   [INFO]
-
 
 ------------------------------------------------------------------
 RULE E2 - RANDOM ACCESS EMULATION (HINT)
@@ -1022,128 +1045,7 @@ and
 Purpose:
 
   Provide a possible strategy for replacing
-  CP/M 2.x random-record operations.
-
-Notes:
-
-  CP/M 1.4 has no equivalent of BDOS
-  functions 21 and 22.
-
-  One possible solution is to translate
-  random records into:
-
-      extent number
-      record within extent
-
-Example (8080):
-
-    ; DE = absolute record number
-
-    MOV A,E
-    RAL
-
-    MOV A,D
-    RAL
-
-    ; A = extent number
-
-    MOV A,E
-    ANI 7FH
-
-    ; A = record inside extent
-
-Conceptual algorithm:
-
-    extent = record / 128
-
-    record = record MOD 128
-
-    if extent changed then
-
-        CLOSE current extent
-        OPEN requested extent
-
-        if OPEN fails then
-            MAKE extent
-
-    perform BDOS 14 or BDOS 15
-
-Typical BDOS sequence:
-
-    MVI C,16
-    CALL BDOS
-
-    ...
-
-    MVI C,15
-    CALL BDOS
-
-    ...
-
-    MVI C,22
-    CALL BDOS
-
-Classification:
-
-  [INFO]
-
-------------------------------------------------------------------
-RULE E3 - EXISTING RANDOM ACCESS EMULATION
-------------------------------------------
-
-Trigger:
-
-  RULE A6
-  RULE A7
-
-Purpose:
-
-  Detect pre-existing CP/M 1.x random-access
-  emulation.
-
-Indicators:
-
-      OPEN
-      CLOSE
-      MAKE
-
-  combined with:
-
-      extent manipulation
-
-      record masking with 7FH
-
-      extent change detection
-
-Example:
-
-    ANI 7FH
-
-or
-
-    CPI old_extent
-
-followed by:
-
-    CLOSE
-    OPEN
-
-Interpretation:
-
-  Such code frequently represents a complete
-  CP/M 1.x replacement for BDOS random-record
-  operations.
-
-Action:
-
-  Prefer reporting existing compatibility
-  support rather than a missing portability
-  feature.
-
-Classification:
-
-  [INFO]
-
+  CP/M 2.x random-record
 ------------------------------------------------------------------
 
 
