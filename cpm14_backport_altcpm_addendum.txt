@@ -1,0 +1,163 @@
+SKILL: ALTCPM CPM22-CPM14 COMPATIBILITY
+VERSION: 0.1
+
+PURPOSE
+-------
+
+Supplement the CPM22 TO CPM14 PORTING ANALYZER
+when BOTH source and target operating systems
+are ALTCPM variants.
+
+This skill focuses on CP/M version differences
+only.
+
+Memory rebasing issues shall be ignored.
+
+
+FUNDAMENTAL RULE
+----------------
+
+When both environments are ALTCPM:
+
+  BOOT = 4200h
+  BDOS = 4205h
+  FCB1 = 425Ch
+  FCB2 = 426Ch
+  DMA  = 4280h
+  TPA  = 4300h
+
+These addresses shall be treated as already
+correct.
+
+No further relocation analysis is required.
+
+
+------------------------------------------------------------------
+
+RULE A1 - PRESERVE ALTCPM SYSTEM ADDRESSES
+------------------------------------------
+
+Pattern:
+
+  4200h
+  4205h
+  425Ch
+  426Ch
+  4280h
+  4300h
+
+Purpose:
+
+  Detect already-relocated ALTCPM addresses.
+
+Action:
+
+  Do not report conversion requirements.
+
+Classification:
+
+  [OK]
+
+
+------------------------------------------------------------------
+
+RULE A2 - BDOS FUNCTION COMPATIBILITY
+-------------------------------------
+
+Pattern:
+
+  MVI C,n
+  CALL BDOS
+
+Purpose:
+
+  Analyze CP/M 1.4 / 2.2 function availability.
+
+Notes:
+
+  Only the BDOS function number is relevant.
+
+  The BDOS entry point remains 4205h.
+
+Action:
+
+  Ignore the BDOS address itself and
+  evaluate only function compatibility.
+
+Classification:
+
+  [INFO]
+
+
+------------------------------------------------------------------
+
+RULE A3 - BIOS VECTOR COMPATIBILITY
+-----------------------------------
+
+Pattern:
+
+  CALL SELDSK
+  CALL SETTRK
+  CALL SETSEC
+  CALL READ
+  CALL WRITE
+
+Purpose:
+
+  Analyze BIOS interface usage.
+
+Notes:
+
+  BIOS entry addresses may differ between
+  systems.
+
+  Function ordering and semantics are more
+  important than absolute addresses.
+
+Action:
+
+  Ignore ALTCPM rebasing and verify BIOS
+  compatibility only.
+
+Classification:
+
+  [CHECK]
+
+
+------------------------------------------------------------------
+
+RULE A4 - INTERNAL TABLE OFFSETS
+--------------------------------
+
+Pattern:
+
+  DPH offsets
+  DPB offsets
+  FCB offsets
+  jump-table offsets
+
+Purpose:
+
+  Detect accesses to internal structures.
+
+Notes:
+
+  ALTCPM relocation does not change offsets
+  inside structures.
+
+Examples:
+
+  DPH+7
+  FCB+21H
+  FCB+22H
+
+Action:
+
+  Analyze structure compatibility only.
+
+Classification:
+
+  [INFO]
+
+
+END OF SKILL
