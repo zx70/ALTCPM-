@@ -366,36 +366,47 @@ RULE C2 - EXPLICIT SETDMA OPERATIONS
 
 Pattern:
 
-  Explicit BDOS function 26 (SETDMA) calls:
+  MVI C,26
+  LXI D,80H
+  CALL BDOS
 
-    MVI C,26
-    LXI D,80H
-    CALL BDOS
+or
 
-or:
-
-    MVI C,26
-    LXI D,0080H
-    CALL BDOS
+  MVI C,26
+  LXI D,0080H
+  CALL BDOS
 
 Purpose:
 
   Detect programs that explicitly select
-  the standard CP/M DMA buffer.
+  the standard CP/M DMA buffer through
+  BDOS function 26 (SETDMA).
 
-Typical conversion:
+Notes:
 
-    LXI D,80H
+  This is not merely an access to the
+  command tail area.
 
-becomes
-
-    LXI D,4280H
+  The program explicitly instructs BDOS
+  to use address 0080h as the active DMA
+  buffer for subsequent disk operations.
 
 Action:
 
-  Verify that the DMA address passed to
-  BDOS function 26 has been relocated
-  to the ALTCPM DMA area.
+  Translate the DMA address to the
+  ALTCPM DMA location.
+
+Typical conversion:
+
+  LXI D,80H
+      ->
+  LXI D,4280H
+
+or symbolically:
+
+  DMA EQU 4280H
+
+  LXI D,DMA
 
 Classification:
 
