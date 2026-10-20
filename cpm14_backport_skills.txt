@@ -422,38 +422,7 @@ Classification:
   [WARN]
 
 ------------------------------------------------------------------
-RULE C2 - BDOS FUNCTION 12 VERSION DETECTION
---------------------------------------------
-
-Pattern:
-
-  MVI C,12
-  CALL BDOS
-
-Purpose:
-
-  Detect operating system version testing.
-
-Notes:
-
-  CP/M 2.x returns version information.
-
-  CP/M 1.4 returns zero values and performs the
-  historical "Lift Head" function.
-
-  This is commonly used to distinguish CP/M 1.4
-  from CP/M 2.x.
-
-Action:
-
-  Verify that a CP/M 1.4 execution path exists.
-
-Classification:
-
-  [CHECK]
-
-------------------------------------------------------------------
-RULE C3 - BDOS FUNCTION 30 SEMANTIC CONFLICT
+RULE C2 - BDOS FUNCTION 30 SEMANTIC CONFLICT
 --------------------------------------------
 
 Pattern:
@@ -487,7 +456,7 @@ Classification:
   [WARN]
 
 ------------------------------------------------------------------
-RULE C4 - DRIVE NUMBER ASSUMPTIONS
+RULE C3 - DRIVE NUMBER ASSUMPTIONS
 ----------------------------------
 
 Pattern:
@@ -526,7 +495,7 @@ Classification:
   [CHECK]
 
 ------------------------------------------------------------------
-RULE C5 - SEARCH FIRST/NEXT RETURN VALUE ASSUMPTIONS
+RULE C4 - SEARCH FIRST/NEXT RETURN VALUE ASSUMPTIONS
 ----------------------------------------------------
 
 Pattern:
@@ -570,7 +539,7 @@ Classification:
   [WARN]
 
 ------------------------------------------------------------------
-RULE C6 - USER NUMBER SUPPORT
+RULE C5 - USER NUMBER SUPPORT
 -----------------------------
 
 Pattern:
@@ -598,81 +567,7 @@ Classification:
   [WARN]
 
 ------------------------------------------------------------------
-RULE C7 - RANDOM RECORD SERVICES
---------------------------------
-
-Pattern:
-
-  BDOS functions:
-
-    33
-    34
-    35
-    36
-
-  or accesses to:
-
-    FCB+21H
-    FCB+22H
-    FCB+23H
-
-Purpose:
-
-  Detect dependence on random-record facilities.
-
-Notes:
-
-  These facilities exist in CP/M 2.x.
-
-  CP/M 1.4 sequential file access does not
-  provide equivalent support.
-
-Action:
-
-  Verify presence of a CP/M 1.4 alternative.
-
-Classification:
-
-  [WARN]
-
-------------------------------------------------------------------
-RULE C8 - DPB ACCESS
---------------------
-
-Pattern:
-
-  MVI C,31
-  CALL BDOS
-
-Purpose:
-
-  Detect retrieval of Disk Parameter Block
-  information.
-
-Notes:
-
-  BDOS function 31 exists in CP/M 2.x.
-
-  No equivalent BDOS service exists in CP/M 1.4.
-
-  Programs frequently use this information to
-  obtain:
-
-    Directory size
-    Allocation parameters
-    Reserved tracks
-    Disk geometry
-
-Action:
-
-  Verify availability of a CP/M 1.4 alternative.
-
-Classification:
-
-  [WARN]
-
-------------------------------------------------------------------
-RULE C9 - DRIVE BITMAP ASSUMPTIONS
+RULE C6 - DRIVE BITMAP ASSUMPTIONS
 ----------------------------------
 
 Pattern:
@@ -713,7 +608,7 @@ Classification:
   [CHECK]
 
 ------------------------------------------------------------------
-RULE C10 - DMA SCRATCH AREA DEPENDENCY
+RULE C7 - DMA SCRATCH AREA DEPENDENCY
 --------------------------------------
 
 Pattern:
@@ -987,6 +882,58 @@ Classification:
 
   [WARN]
 
+------------------------------------------------------------------
+RULE D7 - SELDSK DRIVE RANGE ASSUMPTION
+---------------------------------------
+
+Pattern:
+
+  MVI C,n
+  CALL SELDSK
+
+where n > 3
+
+or equivalent drive-selection logic.
+
+Purpose:
+
+  Detect assumptions about the number of BIOS
+  drives supported by the target system.
+
+Notes:
+
+  CP/M 1.4 officially supports drives:
+
+    A: through D:
+
+  corresponding to drive numbers:
+
+    0..3
+
+  CP/M 2.x systems commonly support:
+
+    A: through P:
+
+  corresponding to drive numbers:
+
+    0..15
+
+  Programs performing BIOS-level disk access
+  may bypass BDOS validation and directly
+  invoke SELDSK with drive numbers that are
+  invalid on CP/M 1.4 systems.
+
+  Behaviour on out-of-range drive numbers is
+  BIOS-dependent and may be unpredictable.
+
+Action:
+
+  Verify that selected drive numbers are valid
+  on the target CP/M 1.4 implementation.
+
+Classification:
+
+  [CHECK]
 
 ------------------------------------------------------------------
 END OF SKILL
