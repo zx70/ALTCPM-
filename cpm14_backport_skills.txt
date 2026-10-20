@@ -1269,7 +1269,10 @@ CPMREA:
 CPMWRT:
         DB      0
 
-;---------
+
+
+;**** **** **** ****
+
 
 ;
 ; IMPORTANT
@@ -1307,6 +1310,126 @@ CPMWRT:
         CALL    CPMENT
 
 
+
+;**** **** **** ****
+
+
+
+;
+; DE = absolute record number
+; BC = FCB pointer
+;
+
+        LDA     BDOSVER
+        ORA     A
+        JZ      CPM14POS
+
+;
+; -------------------------
+; CP/M 2.x
+; -------------------------
+;
+
+        ; FCB+33 = RR low
+        ; FCB+34 = RR high
+        ; FCB+35 = RR upper
+
+        LXI     H,22H
+        DAD     B
+
+        MOV     M,E
+        INX     H
+
+        MOV     M,D
+        INX     H
+
+        MVI     M,0
+
+        JMP     POSDONE
+
+;
+; -------------------------
+; CP/M 1.x
+; -------------------------
+;
+
+CPM14POS:
+
+        ;
+        ; extent = record >> 7
+        ;
+
+        MOV     A,E
+        RAL
+
+        MOV     A,D
+        RAL
+
+        ;
+        ; A now contains extent number
+        ;
+
+        PUSH    PSW
+
+        ;
+        ; Compare extent with current FCB extent
+        ;
+        ; (offset depends on FCB layout)
+        ;
+
+        LXI     H,0DH
+        DAD     B
+
+        MOV     E,M
+
+        POP     PSW
+
+        CMP     E
+        JZ      SAMEEXT
+
+        ;
+        ; extent changed
+        ;
+
+        PUSH    PSW
+
+        MVI     C,16            ; CLOSE
+        CALL    CPMENT
+
+        POP     PSW
+
+        MOV     M,A             ; store extent
+
+        MVI     C,15            ; OPEN
+        CALL    CPMENT
+
+        ;
+        ; if OPEN failed
+        ;
+
+        INR     A
+        JNZ     SAMEEXT
+
+        MVI     C,22            ; MAKE
+        CALL    CPMENT
+
+SAMEEXT:
+
+        ;
+        ; record inside extent
+        ; record MOD 128
+        ;
+
+        MOV     A,E
+        ANI     7FH
+
+        ;
+        ; store current record
+        ;
+        ; offset implementation-dependent
+        ;
+
+POSDONE:
 
 
 ;---------------------------------------------------------------------------------------
