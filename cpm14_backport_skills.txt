@@ -1,0 +1,386 @@
+SKILL: CPM22 TO CPM14 PORTING ANALYZER
+VERSION: 0.1
+
+PURPOSE
+-------
+
+Analyze CP/M assembly source code and identify
+constructs that may prevent execution on
+CP/M 1.4 systems.
+
+This skill does NOT automatically modify source.
+
+Its purpose is to classify findings as:
+
+  [OK]      Already compatible
+  [CHECK]   Requires verification
+  [WARN]    Likely CP/M 2.2 dependency
+  [INFO]    Useful information
+
+
+FUNDAMENTAL CONCEPTS
+--------------------
+
+CP/M 1.4 and CP/M 2.2 share most basic
+file operations but differ in:
+
+  - BDOS function availability
+  - random file access support
+  - disk parameter discovery
+  - directory geometry handling
+  - BIOS data structures
+
+Many CP/M 2.2 programs assume services
+not available under CP/M 1.4.
+
+
+COMPATIBILITY ANALYSIS RULE
+---------------------------
+
+When a CP/M 2.2-specific construct appears
+inside code explicitly excluded from CP/M 1.4,
+it shall NOT automatically be reported as a
+compatibility problem.
+
+Examples:
+
+  IF !CPMV1
+      ...
+  ENDIF
+
+  IF CPM22
+      ...
+  ENDIF
+
+  CALL BDOS
+  CPI 20H
+  JNC CPM22_PATH
+
+and a corresponding CP/M 1.4 path exists.
+
+In such cases the CP/M 1.4 implementation
+must be evaluated before issuing warnings.
+
+
+------------------------------------------------------------------
+
+RULE A1 - CP/M VERSION DETECTION
+--------------------------------
+
+Pattern:
+
+  MVI C,12
+  CALL BDOS
+
+Purpose:
+
+  Read operating system version.
+
+Notes:
+
+  Used to select CP/M 1.x or CP/M 2.x
+  execution paths.
+
+Action:
+
+  Verify that a CP/M 1.4 fallback path exists.
+
+Classification:
+
+  [CHECK]
+
+
+------------------------------------------------------------------
+
+RULE A2 - BDOS FUNCTION 31
+--------------------------
+
+Pattern:
+
+  MVI C,31
+  CALL BDOS
+
+Purpose:
+
+  Obtain Disk Parameter Header (DPH)
+  information.
+
+Notes:
+
+  This function is available in CP/M 2.x.
+
+  CP/M 1.4 systems generally require a
+  different mechanism.
+
+Action:
+
+  Verify existence of a CP/M 1.4 fallback.
+
+Classification:
+
+  [WARN]
+
+
+------------------------------------------------------------------
+
+RULE A3 - DPH / DPB INSPECTION
+------------------------------
+
+Pattern:
+
+  Direct traversal of data structures
+  obtained from:
+
+    BDOS function 31
+    SELDSK
+
+Examples:
+
+  DAD D
+  MOV E,M
+  MOV D,M
+
+Purpose:
+
+  Detect assumptions about:
+
+    DPH layout
+    DPB layout
+    directory geometry
+
+Action:
+
+  Verify BIOS compatibility.
+
+Classification:
+
+  [CHECK]
+
+
+------------------------------------------------------------------
+
+RULE A4 - DIRECTORY GEOMETRY DISCOVERY
+--------------------------------------
+
+Pattern:
+
+  Dynamic extraction of directory size
+  or location.
+
+Examples:
+
+  STA DIRMAX
+  STA TRACK
+
+after parsing BIOS structures.
+
+Purpose:
+
+  CP/M 2.x often discovers disk geometry
+  dynamically.
+
+Action:
+
+  Verify equivalent logic for CP/M 1.4.
+
+Classification:
+
+  [CHECK]
+
+
+------------------------------------------------------------------
+
+RULE A5 - BDOS RETURN VALUE ASSUMPTIONS
+---------------------------------------
+
+Pattern:
+
+  Tests on register A immediately
+  after a BDOS call.
+
+Examples:
+
+  INC A
+  JZ ERROR
+
+  ORA A
+  JNZ ERROR
+
+  CPI xx
+
+Purpose:
+
+  Detect assumptions about BDOS return
+  conventions.
+
+Notes:
+
+  Some functions return different status
+  information between implementations.
+
+Action:
+
+  Verify behaviour on target CP/M 1.4.
+
+Classification:
+
+  [CHECK]
+
+
+------------------------------------------------------------------
+
+RULE A6 - RANDOM FILE ACCESS
+----------------------------
+
+Pattern:
+
+  Accesses to:
+
+    FCB+21H
+    FCB+22H
+    FCB+23H
+
+  or BDOS random-access functions.
+
+Purpose:
+
+  Detect dependence on CP/M 2.x random
+  record facilities.
+
+Action:
+
+  Verify whether an alternate CP/M 1.4
+  implementation exists.
+
+Classification:
+
+  [WARN]
+
+
+------------------------------------------------------------------
+
+RULE A7 - EXTENT MANAGEMENT
+---------------------------
+
+Pattern:
+
+  Direct manipulation of extent fields.
+
+Examples:
+
+  OPEN
+  CLOSE
+  MAKE
+
+used while changing extent numbers.
+
+Purpose:
+
+  Detect explicit CP/M 1.4 extent handling.
+
+Notes:
+
+  Such code is commonly written as a
+  compatibility layer for CP/M 1.x.
+
+Action:
+
+  Usually indicates existing portability work.
+
+Classification:
+
+  [INFO]
+
+
+------------------------------------------------------------------
+
+RULE A8 - EXISTING CP/M 1.x COMPATIBILITY
+-----------------------------------------
+
+Pattern:
+
+  IF CPMV1
+
+  IF CPM14
+
+  runtime dispatch to CP/M 1.x-specific code
+
+Purpose:
+
+  Detect pre-existing CP/M 1.x support.
+
+Notes:
+
+  CP/M 2.x constructs found inside a
+  CP/M 2.x-only branch must not be reported
+  as compatibility failures when an alternate
+  CP/M 1.x implementation is present.
+
+Action:
+
+  Evaluate both paths before issuing warnings.
+
+Classification:
+
+  [INFO]
+
+
+------------------------------------------------------------------
+
+RULE B1 - BIOS VECTOR TABLE COPYING
+-----------------------------------
+
+Pattern:
+
+  LHLD BOOT+1
+
+followed by copying BIOS vectors
+into local jump tables.
+
+Purpose:
+
+  Detect direct BIOS dependency.
+
+Action:
+
+  Verify BIOS entry ordering.
+
+Classification:
+
+  [CHECK]
+
+
+------------------------------------------------------------------
+
+RULE B2 - DIRECT BIOS DISK I/O
+------------------------------
+
+Pattern:
+
+  CALL SELDSK
+  CALL SETTRK
+  CALL SETSEC
+  CALL READ
+  CALL WRITE
+
+Purpose:
+
+  Detect utilities bypassing BDOS.
+
+Examples:
+
+  UNERASE
+  FORMAT
+  DISKCOPY
+  DISK EDITORS
+
+Action:
+
+  Verify BIOS compatibility.
+
+Classification:
+
+  [CHECK]
+
+
+END OF SKILL
