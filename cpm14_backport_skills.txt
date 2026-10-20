@@ -1203,4 +1203,113 @@ Classification:
 
 ------------------------------------------------------------------
 
+APPENDIX:
+Examples on how to get co-hexisting file access routines for
+CP/M 1.4 and CP/M 2.2
+
+;
+; Detect CP/M version and initialize BDOS
+; function dispatch table.
+;
+; CP/M 1.x:
+;     BDOS Function 12 returns A = 00h
+;
+; CP/M 2.x:
+;     BDOS Function 12 returns A <> 00h
+;
+; Dispatch table layout:
+;
+;     CPMREA = Read function
+;     CPMWRT = Write function
+;
+; CP/M 1.x:
+;
+;     CPMREA = 14h
+;     CPMWRT = 15h
+;
+; CP/M 2.x:
+;
+;     CPMREA = 21h
+;     CPMWRT = 22h
+;
+
+        MVI     C,12
+        CALL    CPMENT
+
+        STA     BDOSVER
+
+        ORA     A
+
+        LXI     H,1514H          ; CP/M 1.x
+                                ; L=14h READ
+                                ; H=15h WRITE
+
+        JZ      CPMVR1
+
+        LXI     H,2221H          ; CP/M 2.x
+                                ; L=21h READ RANDOM
+                                ; H=22h WRITE RANDOM
+
+CPMVR1:
+        SHLD    CPMREA
+
+        ; execution continues
+
+
+;
+; Storage
+;
+
+BDOSVER:
+        DB      0
+
+CPMREA:
+        DB      0
+
+CPMWRT:
+        DB      0
+
+;---------
+
+;
+; IMPORTANT
+;
+; Under CP/M 2.x:
+;
+;     21h = Read Random
+;     22h = Write Random
+;
+; Under CP/M 1.x:
+;
+;     14h = Read Sequential
+;     15h = Write Sequential
+;
+; Therefore this dispatch mechanism is only
+; valid if an additional compatibility layer
+; translates random record access into
+; CP/M 1.x extent/record operations.
+;
+
+;
+; Read operation
+;
+
+        LDA     CPMREA
+        MOV     C,A
+        CALL    CPMENT
+
+;
+; Write operation
+;
+
+        LDA     CPMWRT
+        MOV     C,A
+        CALL    CPMENT
+
+
+
+
+;---------------------------------------------------------------------------------------
+
+
 END OF SKILL
