@@ -1,5 +1,5 @@
 SKILL: CPM22 TO CPM14 PORTING ANALYZER
-VERSION: 0.1
+VERSION: 0.2
 ------------------------------------------------------------------
 
 PURPOSE
@@ -254,6 +254,12 @@ Action:
 
   Verify whether an alternate CP/M 1.4
   implementation exists.
+
+Notes:
+
+  The presence of RULE A7 indicators may
+  suggest an existing random-access
+  compatibility layer.
 
 Classification:
 
@@ -960,12 +966,11 @@ RULE E1 - RUNTIME BDOS FUNCTION DISPATCH (HINT)
 Trigger:
 
   RULE A1
+
+and one or more of:
+
+  RULE A6
   RULE A8
-
-and
-
-  Multiple CP/M version-dependent BDOS
-  function numbers are present.
 
 Purpose:
 
@@ -1026,9 +1031,17 @@ or
     MOV C,A
     CALL BDOS
 
+Notes:
+
+  Function-number dispatch tables are evidence
+  of existing portability work and should be
+  considered before issuing compatibility
+  warnings.
+
 Classification:
 
   [INFO]
+
 
 ------------------------------------------------------------------
 RULE E2 - RANDOM ACCESS EMULATION (HINT)
@@ -1045,8 +1058,149 @@ and
 Purpose:
 
   Provide a possible strategy for replacing
-  CP/M 2.x random-record
-------------------------------------------------------------------
+  CP/M 2.x random-record operations.
 
+Notes:
+
+  CP/M 1.4 provides no equivalent of BDOS
+  functions 21 and 22.
+
+  A compatibility layer may translate an
+  absolute record number into:
+
+      extent number
+      record within extent
+
+  and use standard CP/M 1.4 sequential
+  operations after selecting the proper
+  extent.
+
+Concept:
+
+    extent = record >> 7
+
+    record = record AND 7FH
+
+The actual implementation may use shifts,
+rotations or arithmetic depending on the
+existing source structure.
+
+Conceptual algorithm:
+
+    extent = record / 128
+
+    record = record MOD 128
+
+    if extent changed then
+
+        CLOSE current extent
+
+        OPEN requested extent
+
+        if OPEN fails then
+            MAKE extent
+
+    set current record
+
+    perform READ or WRITE
+
+Typical operations:
+
+    CLOSE current extent
+
+    OPEN requested extent
+
+    MAKE extent if OPEN fails
+
+    READ sequential record
+
+    WRITE sequential record
+
+Notes:
+
+  The precise FCB offsets used for extent
+  and current-record management vary among
+  implementations and should be verified
+  against the target source code.
+
+  If RULE A7 is also detected, an existing
+  compatibility layer may already be present.
+
+Classification:
+
+  [INFO]
+
+------------------------------------------------------------------
+RULE E3 - EXISTING RANDOM ACCESS EMULATION
+------------------------------------------
+
+Trigger:
+
+  RULE A6
+  RULE A7
+
+Purpose:
+
+  Detect probable CP/M 1.x random-access
+  compatibility code.
+
+Indicators:
+
+      OPEN
+      CLOSE
+      MAKE
+
+  combined with:
+
+      extent manipulation
+
+      record masking using:
+
+          ANI 7FH
+
+      or equivalent masking of the low
+      seven bits of a record number
+
+      extent comparisons
+
+      OPEN/CLOSE cycles associated with
+      extent changes
+
+      extent reopen logic
+
+Interpretation:
+
+  Such code frequently represents an
+  application-level replacement for CP/M 2.x
+  random-record services.
+
+  Typical implementations translate:
+
+      absolute record number
+
+  into:
+
+      extent number
+      record within extent
+
+  and dynamically reopen extents when
+  crossing extent boundaries.
+
+Action:
+
+  Prefer reporting the code as evidence of
+  existing portability work rather than as
+  a missing compatibility feature.
+
+  If a complete extent-management layer is
+  present, RULE A6 findings should be
+  downgraded or correlated with the detected
+  compatibility implementation.
+
+Classification:
+
+  [INFO]
+
+------------------------------------------------------------------
 
 END OF SKILL
