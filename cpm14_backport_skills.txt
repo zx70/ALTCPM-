@@ -1330,9 +1330,9 @@ CPMWRT:
 ; -------------------------
 ;
 
-        ; FCB+33 = RR low
-        ; FCB+34 = RR high
-        ; FCB+35 = RR upper
+        ; FCB+22h = RR low
+        ; FCB+23h = RR high
+        ; FCB+24h = RR upper
 
         LXI     H,22H
         DAD     B
@@ -1432,7 +1432,97 @@ SAMEEXT:
 POSDONE:
 
 
-;---------------------------------------------------------------------------------------
+;**** **** **** ****
 
+
+Emulation as described in E3 how to convert an absolute recor in (extent, record-in-extent)
+
+RNDVR1:
+        LXI     H,000DH         ; POINT TO EXTENT
+        DAD     B               ; ADD START OF FILE CONTROL BLOCK
+
+        MOV     A,E             ; GET LOW BYTE OF OFFSET
+        RAL                     ; GET HIGH BIT IN CARRY
+
+        MOV     A,D             ; GET HIGH BYTE
+        RAL                     ; ROTATE IN HIGH BYTE OF LOW PART
+                                ; A = extent number
+
+        MOV     D,M             ; ORIGINAL EXTENT
+        CMP     D               ; SAME EXTENT?
+        JZ      SAMEXT
+
+        PUSH    D               ; SAVE RECORD NUMBER
+        PUSH    PSW             ; SAVE NEW EXTENT
+        PUSH    H               ; SAVE POINTER TO EXTENT
+        PUSH    B               ; SAVE FILE POINTER
+
+        LXI     D,DIRTMP
+        MVI     C,1AH           ; SET DMA ADDRESS
+        CALL    CPMENT
+
+        POP     D               ; FCB POINTER
+        PUSH    D
+
+        INX     D               ; POINT TO FCB
+        MVI     C,10H           ; CLOSE FILE
+        CALL    CPMENT
+
+        POP     D               ; RESTORE FCB POINTER
+
+        POP     H               ; EXTENT POINTER
+        POP     PSW             ; NEW EXTENT
+
+        MOV     M,A             ; STORE NEW EXTENT
+
+        PUSH    D
+        INX     D               ; POINT TO FCB
+
+        MVI     C,0FH           ; OPEN FILE
+        PUSH    D
+        CALL    CPMENT
+
+        POP     D
+
+        INR     A               ; EXTENT EXISTS?
+        JNZ     RNDOK
+
+        MVI     C,16H           ; MAKE FILE
+        CALL    CPMENT
+
+        INR     A               ; DIRECTORY FULL?
+        JZ      FL_ERR
+
+RNDOK:
+        POP     B               ; RESTORE FCB POINTER
+        POP     D               ; RESTORE RECORD NUMBER
+
+SAMEXT:
+        LXI     H,0021H         ; CURRENT RECORD FIELD
+        DAD     B
+
+        MOV     A,E             ; LOW BYTE OF RECORD
+        ANI     7FH             ; RECORD WITHIN EXTENT
+
+        MOV     M,A
+
+RNDDON:
+        ; HL points at file data structure
+
+;--------------------------------
+; ---> The code above is equivalent to the following one for CP/M 2.2:
+
+        LXI     H,0022H         ; FCB+22H : Random Record Number
+        DAD     B
+
+        MOV     M,E             ; RR low byte
+
+        INX     H
+        MOV     M,D             ; RR high byte
+
+        INX     H
+        MVI     M,00H           ; RR upper byte
+
+;---------------------------------------------------------------------------------------
 
 END OF SKILL
