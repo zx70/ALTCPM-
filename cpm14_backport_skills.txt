@@ -383,4 +383,374 @@ Classification:
   [CHECK]
 
 
+------------------------------------------------------------------
+RULE C1 - BDOS FUNCTION 6 SEMANTIC CONFLICT
+-------------------------------------------
+
+Pattern:
+
+  MVI C,6
+  CALL BDOS
+
+Purpose:
+
+  Detect use of BDOS function 6.
+
+Notes:
+
+  CP/M 1.4:
+
+    Detect Memory Size
+
+  CP/M 2.x:
+
+    Direct Console I/O
+
+  The same function number performs completely
+  different operations.
+
+Action:
+
+  Verify that the intended behaviour is valid
+  under CP/M 1.4.
+
+Classification:
+
+  [WARN]
+
+------------------------------------------------------------------
+RULE C2 - BDOS FUNCTION 12 VERSION DETECTION
+--------------------------------------------
+
+Pattern:
+
+  MVI C,12
+  CALL BDOS
+
+Purpose:
+
+  Detect operating system version testing.
+
+Notes:
+
+  CP/M 2.x returns version information.
+
+  CP/M 1.4 returns zero values and performs the
+  historical "Lift Head" function.
+
+  This is commonly used to distinguish CP/M 1.4
+  from CP/M 2.x.
+
+Action:
+
+  Verify that a CP/M 1.4 execution path exists.
+
+Classification:
+
+  [CHECK]
+
+------------------------------------------------------------------
+RULE C3 - BDOS FUNCTION 30 SEMANTIC CONFLICT
+--------------------------------------------
+
+Pattern:
+
+  MVI C,30
+  CALL BDOS
+
+Purpose:
+
+  Detect use of BDOS function 30.
+
+Notes:
+
+  CP/M 1.4:
+
+    Set Directory Buffer
+
+  CP/M 2.x:
+
+    Set File Attributes
+
+  The same function number has completely
+  different meanings.
+
+Action:
+
+  Verify intended behaviour under CP/M 1.4.
+
+Classification:
+
+  [WARN]
+
+------------------------------------------------------------------
+RULE C4 - DRIVE NUMBER ASSUMPTIONS
+----------------------------------
+
+Pattern:
+
+  Drive selections above D:.
+
+Examples:
+
+  MVI E,4
+  CALL BDOS
+
+  or equivalent logic.
+
+Purpose:
+
+  Detect assumptions about the number of
+  available logical drives.
+
+Notes:
+
+  CP/M 1.4 supports drives:
+
+    A: through D:
+
+  CP/M 2.x supports drives:
+
+    A: through P:
+
+Action:
+
+  Verify that target drive numbers are valid
+  under CP/M 1.4.
+
+Classification:
+
+  [CHECK]
+
+------------------------------------------------------------------
+RULE C5 - SEARCH FIRST/NEXT RETURN VALUE ASSUMPTIONS
+----------------------------------------------------
+
+Pattern:
+
+  Tests on register A after:
+
+    BDOS 17
+    BDOS 18
+
+Examples:
+
+  CPI 4
+  JC ...
+
+  ANI 3
+
+Purpose:
+
+  Detect assumptions about Search First /
+  Search Next return values.
+
+Notes:
+
+  CP/M 2.x returns values in the range:
+
+    0..3
+
+  representing entries inside the DMA buffer.
+
+  CP/M 1.4 may return values covering the
+  directory entry number.
+
+  Programs assuming the range 0..3 may fail.
+
+Action:
+
+  Verify return-value handling.
+
+Classification:
+
+  [WARN]
+
+------------------------------------------------------------------
+RULE C6 - USER NUMBER SUPPORT
+-----------------------------
+
+Pattern:
+
+  MVI C,32
+  CALL BDOS
+
+Purpose:
+
+  Detect use of User Areas.
+
+Notes:
+
+  BDOS function 32 is available in CP/M 2.x.
+
+  CP/M 1.4 provides no equivalent service.
+
+Action:
+
+  Provide alternate implementation or
+  compatibility logic.
+
+Classification:
+
+  [WARN]
+
+------------------------------------------------------------------
+RULE C7 - RANDOM RECORD SERVICES
+--------------------------------
+
+Pattern:
+
+  BDOS functions:
+
+    33
+    34
+    35
+    36
+
+  or accesses to:
+
+    FCB+21H
+    FCB+22H
+    FCB+23H
+
+Purpose:
+
+  Detect dependence on random-record facilities.
+
+Notes:
+
+  These facilities exist in CP/M 2.x.
+
+  CP/M 1.4 sequential file access does not
+  provide equivalent support.
+
+Action:
+
+  Verify presence of a CP/M 1.4 alternative.
+
+Classification:
+
+  [WARN]
+
+------------------------------------------------------------------
+RULE C8 - DPB ACCESS
+--------------------
+
+Pattern:
+
+  MVI C,31
+  CALL BDOS
+
+Purpose:
+
+  Detect retrieval of Disk Parameter Block
+  information.
+
+Notes:
+
+  BDOS function 31 exists in CP/M 2.x.
+
+  No equivalent BDOS service exists in CP/M 1.4.
+
+  Programs frequently use this information to
+  obtain:
+
+    Directory size
+    Allocation parameters
+    Reserved tracks
+    Disk geometry
+
+Action:
+
+  Verify availability of a CP/M 1.4 alternative.
+
+Classification:
+
+  [WARN]
+
+------------------------------------------------------------------
+RULE C9 - DRIVE BITMAP ASSUMPTIONS
+----------------------------------
+
+Pattern:
+
+  MVI C,24
+  CALL BDOS
+
+  or
+
+  MVI C,29
+  CALL BDOS
+
+  followed by bitmap processing.
+
+Purpose:
+
+  Detect assumptions about drive bitmap layout.
+
+Notes:
+
+  CP/M 2.x returns bitmaps covering drives:
+
+    A: through P:
+
+  CP/M 1.4 supports at most:
+
+    A: through D:
+
+  Programs scanning or manipulating all 16 bits
+  may contain CP/M 2.x assumptions.
+
+Action:
+
+  Verify bitmap interpretation.
+
+Classification:
+
+  [CHECK]
+
+------------------------------------------------------------------
+RULE C10 - DMA SCRATCH AREA DEPENDENCY
+--------------------------------------
+
+Pattern:
+
+  Direct access to memory immediately preceding
+  the DMA buffer.
+
+Examples:
+
+    DMA-1
+    DMA-2
+    DMA-3
+
+  or literal references consistent with the
+  default DMA area:
+
+    7DH
+    7EH
+    7FH
+
+Purpose:
+
+  Detect assumptions about internal DMA buffer
+  layout.
+
+Notes:
+
+  CP/M 1.4 uses bytes preceding the DMA area as
+  temporary storage during disk operations.
+
+  Programs reusing these locations may interfere
+  with CP/M 1.4 operation.
+
+Action:
+
+  Verify that the area is not relied upon for
+  persistent program data.
+
+Classification:
+
+  [CHECK]
+
 END OF SKILL
