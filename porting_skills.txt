@@ -361,6 +361,101 @@ Classification:
 
 ------------------------------------------------------------------
 
+RULE C2 - EXPLICIT SETDMA OPERATIONS
+------------------------------------
+
+Pattern:
+
+  Explicit BDOS function 26 (SETDMA) calls:
+
+    MVI C,26
+    LXI D,80H
+    CALL BDOS
+
+or:
+
+    MVI C,26
+    LXI D,0080H
+    CALL BDOS
+
+Purpose:
+
+  Detect programs that explicitly select
+  the standard CP/M DMA buffer.
+
+Typical conversion:
+
+    LXI D,80H
+
+becomes
+
+    LXI D,4280H
+
+Action:
+
+  Verify that the DMA address passed to
+  BDOS function 26 has been relocated
+  to the ALTCPM DMA area.
+
+Classification:
+
+  [OK]
+
+
+------------------------------------------------------------------
+
+RULE C3 - DIRECTORY GEOMETRY ASSUMPTIONS
+----------------------------------------
+
+Pattern:
+
+  Direct BIOS disk access combined with
+  hard-coded directory parameters.
+
+Examples:
+
+    TRACK  DB 2
+    DIRMAX DB 16
+
+or:
+
+    CALL SELDSK
+    CALL SETTRK
+    CALL SETSEC
+    CALL READ
+
+Purpose:
+
+  Detect applications that access directory
+  sectors directly through BIOS functions and
+  therefore assume specific disk geometry,
+  directory location, or reserved boot area
+  layout.
+
+Notes:
+
+  Such assumptions are independent of the
+  ALTCPM 4200h relocation.
+
+  A program may require adjustment of:
+
+    - directory start track
+    - reserved boot tracks
+    - directory size
+    - sector numbering
+
+Action:
+
+  Verify that the target ALTCPM system uses
+  compatible disk geometry.
+
+Classification:
+
+  [CHECK]
+
+
+------------------------------------------------------------------
+
 RULE D1 - RET TO CP/M
 ---------------------
 
