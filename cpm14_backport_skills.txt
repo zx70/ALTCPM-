@@ -1,5 +1,6 @@
 SKILL: CPM22 TO CPM14 PORTING ANALYZER
 VERSION: 0.1
+------------------------------------------------------------------
 
 PURPOSE
 -------
@@ -16,6 +17,8 @@ Its purpose is to classify findings as:
   [CHECK]   Requires verification
   [WARN]    Likely CP/M 2.2 dependency
   [INFO]    Useful information
+
+------------------------------------------------------------------
 
 
 FUNDAMENTAL CONCEPTS
@@ -753,4 +756,237 @@ Classification:
 
   [CHECK]
 
+SECTION D - BIOS COMPATIBILITY
+==============================
+
+ALTCPM NOTE
+-----------
+
+ALTCPM-derived CP/M 1.4 systems may provide BIOS
+extensions normally associated with CP/M 2.x.
+
+Examples include:
+
+  - DPH-like structures
+  - SELDSK return values
+  - sector translation facilities
+  - additional BIOS entry points
+
+The presence of such facilities must not be
+assumed solely from the operating system version.
+
+Conversely, the absence of a standard CP/M 2.x
+feature must not automatically be interpreted as
+a compatibility failure.
+
+When evidence indicates an ALTCPM-derived BIOS,
+warnings related to DPH handling, SELDSK return
+values, sector translation or geometry discovery
+should be evaluated against the actual BIOS
+implementation rather than the nominal CP/M
+version.
+
+Classification:
+
+  [INFO]
+
+------------------------------------------------------------------
+RULE D1 - SELDSK RETURN VALUE ASSUMPTION
+----------------------------------------
+
+Pattern:
+
+  CALL SELDSK
+
+followed by pointer manipulation such as:
+
+  MOV E,M
+  MOV D,M
+  LHLD xxxx
+  DAD D
+  INX H
+
+or equivalent parsing of a returned structure.
+
+Purpose:
+
+  Detect assumptions about the SELDSK return
+  value.
+
+Notes:
+
+  CP/M 2.x SELDSK returns a DPH address in HL.
+
+  CP/M 1.4 does not define any return value.
+
+  Programs inspecting structures returned by
+  SELDSK are implicitly dependent on CP/M 2.x
+  BIOS behaviour.
+
+  See ALTCPM NOTE.
+
+Action:
+
+  Verify presence of a CP/M 1.4 alternative or
+  confirm equivalent BIOS support.
+
+Classification:
+
+  [WARN]
+
+------------------------------------------------------------------
+RULE D2 - SETTRK WORD PARAMETER ASSUMPTION
+------------------------------------------
+
+Pattern:
+
+  LXI B,xxxx
+  CALL SETTRK
+
+or any track number passed as a 16-bit value.
+
+Purpose:
+
+  Detect assumptions about track parameter size.
+
+Notes:
+
+  CP/M 1.4 accepts an 8-bit track number in C.
+
+  CP/M 2.x uses a 16-bit track number in BC.
+
+Action:
+
+  Verify that track numbers remain within the
+  CP/M 1.4 range.
+
+Classification:
+
+  [CHECK]
+
+------------------------------------------------------------------
+RULE D3 - SETSEC WORD PARAMETER ASSUMPTION
+------------------------------------------
+
+Pattern:
+
+  LXI B,xxxx
+  CALL SETSEC
+
+or any sector number passed as a 16-bit value.
+
+Purpose:
+
+  Detect assumptions about sector parameter
+  size.
+
+Notes:
+
+  CP/M 1.4 accepts an 8-bit sector number in C.
+
+  CP/M 2.x uses a 16-bit sector number in BC.
+
+Action:
+
+  Verify BIOS compatibility.
+
+Classification:
+
+  [CHECK]
+
+------------------------------------------------------------------
+RULE D4 - WRITE DEBLOCKING CODES
+--------------------------------
+
+Pattern:
+
+  MVI C,1
+  CALL WRITE
+
+  MVI C,2
+  CALL WRITE
+
+Purpose:
+
+  Detect use of WRITE deblocking modes.
+
+Notes:
+
+  CP/M 2.x BIOS implementations may use
+  deblocking information supplied in C.
+
+  CP/M 1.4 implementations may not provide
+  equivalent behaviour.
+
+Action:
+
+  Verify BIOS behaviour on target system.
+
+Classification:
+
+  [CHECK]
+
+------------------------------------------------------------------
+RULE D5 - LISTST BIOS ENTRY
+---------------------------
+
+Pattern:
+
+  CALL LISTST
+
+Purpose:
+
+  Detect use of printer-status BIOS service.
+
+Notes:
+
+  LISTST is present in CP/M 2.x BIOSes.
+
+  LISTST is not part of the standard CP/M 1.4
+  BIOS jump table.
+
+Action:
+
+  Provide an alternate implementation or a
+  CP/M 1.4 compatibility path.
+
+Classification:
+
+  [WARN]
+
+------------------------------------------------------------------
+RULE D6 - SECTRAN BIOS ENTRY
+----------------------------
+
+Pattern:
+
+  CALL SECTRAN
+
+Purpose:
+
+  Detect dependence on BIOS sector translation.
+
+Notes:
+
+  SECTRAN exists in CP/M 2.x BIOSes.
+
+  SECTRAN is not part of the standard CP/M 1.4
+  BIOS jump table.
+
+  Programs using SECTRAN often depend upon
+  CP/M 2.x style skew-table handling.
+
+  See ALTCPM NOTE.
+
+Action:
+
+  Verify presence of a CP/M 1.4 alternative or
+  confirm equivalent BIOS support.
+
+Classification:
+
+  [WARN]
+
+
+------------------------------------------------------------------
 END OF SKILL
