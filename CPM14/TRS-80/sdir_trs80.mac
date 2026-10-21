@@ -1,5 +1,5 @@
 ;
-; List the directory in parallel columns
+; List the directory in parallel columns (fill left column first, etc..)
 ; Adjusted for the 16 rows TRS-80 display - Stefano 10/2026
 ;
 
