@@ -1,5 +1,5 @@
 SKILL: ALTCPM PORTING ANALYZER
-VERSION: 0.4
+VERSION: 1.0
 
 PURPOSE
 -------
@@ -128,28 +128,26 @@ Classification:
 
 ------------------------------------------------------------------
 
-RULE A4 - COM PROGRAM LOAD ADDRESS
-----------------------------------
+RULE A4 - COM PROGRAM ORIGIN
 
 Pattern:
 
   ORG 100H
 
-or explicit references to the CP/M TPA entry:
+Purpose:
 
-  LXI H,100H
-  LXI D,100H
-  JMP 100H
-  CALL 100H
+  Detect standard CP/M COM program origin.
 
 Action:
 
-  Verify whether the reference represents
-  the CP/M COM load address.
+  Translate to ALTCPM TPA origin when
+  required.
 
 Typical conversion:
 
-  0100h -> 4300h
+  ORG 100H
+      ->
+  ORG 4300H
 
 Classification:
 
@@ -316,8 +314,7 @@ Classification:
 
 ------------------------------------------------------------------
 
-RULE B5 - TPA ADDRESS REFERENCES
---------------------------------
+RULE B5 - TPA ADDRESS ASSUMPTIONS
 
 Pattern:
 
@@ -328,23 +325,26 @@ Pattern:
 Examples:
 
   LXI H,100H
+  LXI D,100H
   SHLD STARTADR
   CALL 100H
+  JMP 100H
 
 Purpose:
 
   Detect assumptions that a COM program
-  is loaded at the standard CP/M transient
-  program area.
+  executes at the standard CP/M transient
+  program area address.
+
+Action:
+
+  Verify intent and relocate when the
+  reference represents the COM load
+  location.
 
 Typical conversion:
 
   0100h -> 4300h
-
-Action:
-
-  Verify intent and convert when the address
-  represents the COM load location.
 
 Classification:
 
@@ -555,6 +555,119 @@ Observed and validated in real ports:
   LXI H,100H
       -> LXI H,4300H
 
+------------------------------------------------------------------
+
+RULE M1 - MIXED RELOCATION
+
+Purpose:
+
+  Detect simultaneous use of relocated and
+  non-relocated forms of the same CP/M object.
+
+Examples:
+
+  005Ch and 425Ch
+  0080h and 4280h
+  0005h and 4205h
+
+Action:
+
+  Verify whether relocation was applied
+  consistently throughout the source.
+
+Notes:
+
+  Mixed relocation may occur with either
+  numeric addresses or symbolic aliases
+  referring to the same CP/M object.
+
+Classification:
+
+  [WARN]
+
+
+------------------------------------------------------------------
+
+RULE M2 - RELOCATION FRAMEWORK QUALITY
+
+--------------------------------------
+
+Purpose:
+
+  Analyze how ALTCPM relocation is expressed
+  within the source code and suggest possible
+  improvements.
+
+Detection:
+
+  Look for:
+
+    - BASE-style relocation constants
+    - symbolic definitions of CP/M system
+      addresses
+    - hard-coded relocated addresses
+
+Recommended form:
+
+  BASE EQU 4200H
+
+  BOOT EQU BASE+0000H
+  BDOS EQU BASE+0005H
+  FCB1 EQU BASE+005CH
+  FCB2 EQU BASE+006CH
+  DMA  EQU BASE+0080H
+  TPA  EQU BASE+0100H
+
+  ORG BASE+0100H
+
+Examples requiring improvement:
+
+  ORG 4300H
+
+  LD HL,425DH
+  LD DE,425CH
+  CALL 4205H
+
+Suggestion:
+
+  Consider introducing a common relocation
+  constant and expressing CP/M system
+  addresses relative to that constant.
+
+Benefits:
+
+  - simplifies review of porting changes
+  - reduces relocation errors
+  - improves maintainability
+  - enables easy rebasing to other ALTCPM
+    variants
+  - keeps CP/M structure offsets visible
+
+Examples:
+
+  CALL 4205H
+      ->
+  CALL BDOS
+
+  BDOS EQU 4205H
+      ->
+  BASE EQU 4200H
+  BDOS EQU BASE+0005H
+
+  ORG 4300H
+      ->
+  ORG BASE+0100H
+
+Action:
+
+  No action required if a coherent relocation
+  framework already exists.
+
+Classification:
+
+  [INFO]
+
+
+------------------------------------------------------------------
 
 END OF SKILL
-``
