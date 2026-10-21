@@ -718,18 +718,28 @@ Notes:
 
   CP/M 2.x SELDSK returns a DPH address in HL.
 
-  CP/M 1.4 does not define any return value.
+  Officially, CP/M 1.4 does not define any
+  return value.
 
   Programs inspecting structures returned by
-  SELDSK are implicitly dependent on CP/M 2.x
-  BIOS behaviour.
+  SELDSK are therefore dependent on BIOS
+  behaviour that is not guaranteed by
+  standard CP/M 1.4 systems.
 
   See ALTCPM NOTE.
 
 Action:
 
-  Verify presence of a CP/M 1.4 alternative or
-  confirm equivalent BIOS support.
+  Verify whether the inspected portions of the
+  returned structure are compatible with the
+  target BIOS implementation.
+
+  If equivalent DPH support exists, retaining
+  the existing SELDSK-based logic may be a
+  viable porting strategy.
+
+  Otherwise provide a CP/M 1.4-specific
+  alternative.
 
 Classification:
 
@@ -1003,6 +1013,12 @@ Example (8080):
     JZ INITDONE
 
     LXI H,2221H
+
+; SHLD stores the low byte first.
+; Therefore:
+;
+; L = READ function
+; H = WRITE function.
 
 INITDONE:
     SHLD CPMREA
