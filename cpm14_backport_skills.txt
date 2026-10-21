@@ -1217,6 +1217,96 @@ Classification:
 
   [INFO]
 
+
+------------------------------------------------------------------
+RULE E4 - SEARCH FIRST/NEXT INDEX NORMALIZATION (HINT)
+------------------------------------------------------
+
+Trigger:
+
+  RULE C4
+
+Purpose:
+
+  Provide a compatibility strategy for
+  programs that derive DMA entry offsets
+  directly from BDOS Search First/Search Next
+  return values.
+
+Notes:
+
+  Many CP/M 2.x programs assume that BDOS
+  functions 17 and 18 return values in the
+  range:
+
+      0..3
+
+  corresponding to one of the four directory
+  entries contained in the DMA buffer.
+
+  Some CP/M 1.4 implementations may return
+  values derived from the directory entry
+  number rather than a DMA-relative index.
+
+  Code that directly converts the returned
+  value into a DMA offset may therefore
+  obtain incorrect results.
+
+Examples:
+
+      ANI 03H
+
+      RRC
+      RRC
+      RRC
+
+  or equivalent multiplication by 32.
+
+Possible compatibility strategy:
+
+      DCR A
+      ANI 03H
+
+  before converting the value into a DMA
+  offset.
+
+Example (8080):
+
+      DCR A
+      ANI 03H
+
+      RRC
+      RRC
+      RRC
+
+Result:
+
+      A = ((A-1) AND 3) * 32
+
+  providing compatibility with systems where
+  Search First/Search Next returns directory
+  entry numbers rather than DMA-relative
+  entry indexes.
+
+Action:
+
+  Verify actual Search First/Search Next
+  return semantics on the target system
+  before applying any transformation.
+
+Notes:
+
+  This is a compatibility hint only.
+
+  Programs already supporting both CP/M 1.4
+  and CP/M 2.x may implement equivalent
+  normalization logic by other means.
+
+Classification:
+
+  [INFO]
+
+
 ------------------------------------------------------------------
 
 APPENDIX:
