@@ -1,0 +1,365 @@
+;Edited 12/5/81
+
+.Z80
+
+BASE   EQU 4200H
+SYSTEM EQU BASE+5
+
+ASEG
+	ORG	BASE+100H
+	JP	START
+
+OLDSTCK:DEFW	0000H			;Save SP here
+NODE:	DEFW	0			;Node to add
+NODE1:	DEFW	0			;Node on tree to compare
+PTR:	DEFW	0			;Node to be allocated next
+TREE:	DEFW	0			;Root of tree for tree sort
+COUNT:	DEFB	0
+SCRPTR:	DEFW	SCRATCH			;First byte to use
+P1:	DEFW	SCRATCH
+P2:	DEFW	SCRATCH+242
+P3:	DEFW	SCRATCH+2*242
+P4:	DEFW	SCRATCH+3*242
+P5:	DEFW	SCRATCH+4*242
+
+NOTICE:	DEFB	"SDIR Ver 8 (C) OCT. 80 J.S.LINFOOT, 10 PEMBROKE COURT,"
+	DEFB	" RECTORY ROAD, OXFORD U.K.",0
+MESS2:	DEFB	" files found.",0
+MESS3:	DEFB	" file found.",0
+MESS4:	DEFB	"Hit any key for next page",0
+NO:	DEFB	"No",0
+
+HD	EQU	0
+TL	EQU	2
+
+OUT:	PUSH	HL			;Save registers
+	PUSH	DE
+	PUSH	BC
+	PUSH	AF
+	LD	C,2			;Out console
+	CALL	SYSTEM
+	POP	AF
+	POP	BC
+	POP	DE
+	POP	HL
+	RET
+
+NEWLINE:LD	E,0DH			;CR
+	CALL	OUT
+	LD	E,0AH			;LF
+	CALL	OUT
+	RET
+
+SPACE:	LD	E,' '			;SP
+	CALL	OUT
+	RET
+
+SPACE4:	CALL	SPACE
+	CALL	SPACE
+	CALL	SPACE
+	CALL	SPACE
+	RET
+
+OUTS:	LD	E,(HL)
+	CALL	OUT
+	INC	HL
+	DJNZ	OUTS
+	RET
+
+OUTMESS:LD	A,(HL)			;Get first char
+	CP	0
+	RET	Z
+	LD	E,A
+	CALL	OUT
+	INC	HL
+	JP	OUTMESS			;Loop if not done
+
+WAIT:	LD	C,11
+	CALL	SYSTEM
+	AND	01H
+	LD	C,1
+	CALL	NZ,SYSTEM
+	LD	C,1
+	CALL	SYSTEM
+	RET
+
+EXIT:	LD	HL,(OLDSTCK)		;restore stack and exit
+	LD	SP,HL
+	RET
+
+GETNAM:	AND	03H			;There are 4 entries per buffer
+	RRCA
+	RRCA
+	RRCA				;Multiply by 32; the length of entry
+	INC	A			;Name start at byte 1
+	LD	B,0
+	LD	C,A
+	LD	HL,BASE+0080H		;Start of buffer
+	ADD	HL,BC
+	PUSH	BC
+	PUSH	DE
+	PUSH	HL
+	LD	DE,(PTR)		;Space for new node
+	LD	(NODE),DE		;Note the node for comp.
+	LD	B,4
+	LD	A,0
+LPZERO:	LD	(DE),A			;Zero head and tail
+	INC	DE
+	DJNZ	LPZERO
+;DE now points at the start of name field
+	LD	BC,11
+	LDIR
+	LD	(PTR),DE
+	LD	HL,(NODE)		;Get new node
+	LD	DE,12
+	ADD	HL,DE			;Look at type field
+	LD	B,3
+MSKLP:	LD	A,(HL)
+	AND	7FH
+	LD	(HL),A			;Mask out top bits
+	INC	HL
+	DJNZ	MSKLP
+	POP	HL
+	POP	DE
+	POP	BC
+	CALL	ADDTOT
+	RET
+;(NODE1) is the node on the tree to be compared
+;(NODE) is the node being added
+
+ADDTOT:	PUSH	BC
+	PUSH	DE
+	PUSH	HL
+	PUSH	IX
+	LD	IX,TREE			;^NODE
+	LD	HL,(TREE)		;NODE
+LOOP:	LD	A,H
+	OR	L			;IS NODE NULL
+	JP	Z,INSERT
+	LD	(NODE1),HL
+	CALL	COMP			;CARRY SET IF NODE < TREE
+	JP	C,AHOP
+	INC	HL
+	INC	HL
+AHOP:	PUSH	HL
+	POP	IX
+	LD	L,(IX)
+	LD	H,(IX+1)
+	JP	LOOP
+INSERT:	LD	A,(NODE)
+	LD	(IX),A
+	LD	A,(NODE+1)
+	LD	(IX+1),A
+	POP	IX
+	POP	HL
+	POP	DE
+	POP	BC
+
+COMP:	PUSH	BC
+	PUSH	DE
+	PUSH	HL
+	LD	DE,(NODE)
+	LD	HL,(NODE1)
+	LD	B,4
+INCLP:	INC	DE
+	INC	HL
+	DJNZ	INCLP
+	LD	B,11
+CLOOP:	LD	A,(DE)
+	CP	(HL)
+	JP	NZ,CEXIT
+	INC	DE
+	INC	HL
+	DJNZ	CLOOP
+CEXIT:	POP	HL
+	POP	DE
+	POP	BC
+	RET
+
+;(Tree) is the tree to print
+
+FLATT:	PUSH	IX			;Flatten tree.
+	LD	IX,(TREE)		;change and then call FT.
+	CALL	FT
+	POP	IX
+	RET
+
+FT:	PUSH	IX			;Tree to print in IX
+	POP	HL
+	LD	A,H
+	OR	L
+	RET	Z			;Nothing to print
+	PUSH	IX
+	LD	L,(IX+HD)		;HL <- Head of IX
+	LD	H,(IX+HD+1)
+	PUSH	HL
+	POP	IX
+	CALL	FT
+	POP	IX
+	CALL	COPYN
+	LD	L,(IX+TL)
+	LD	H,(IX+TL+1)
+	PUSH	HL
+	POP	IX
+	CALL	FT
+	RET
+
+COPYN:	PUSH	IX
+	POP	HL
+	INC	HL
+	INC	HL
+	INC	HL
+	INC	HL
+	LD	DE,(SCRPTR)
+	LD	BC,11
+	LDIR
+	LD	(SCRPTR),DE
+	LD	A,(COUNT)
+	INC	A
+	LD	(COUNT),A
+	RET
+
+PRINTN:	LD	B,8
+	CALL	OUTS
+	CALL	SPACE
+	LD	B,3
+	CALL	OUTS
+	RET
+
+PRNUMB:	PUSH	AF			;Number to print in A
+	PUSH	BC
+	LD	B,0
+LOOPN:	CP	10
+	JR	C,SKIP1
+	INC	B
+	SUB	10
+	JR	LOOPN
+SKIP1:	PUSH	AF
+	LD	A,B
+	CP	0
+	CALL	NZ,PRNUMB
+	POP	AF
+	CALL	OUTD
+	POP	BC
+	POP	AF
+	RET
+
+OUTD:	ADD	A,48			;Convert digit to ASCII
+	LD	E,A			;Char.
+	CALL	OUT
+	RET
+
+START:	CALL	NEWLINE
+	LD	HL,NOTICE
+	CALL	OUTMESS
+	CALL	NEWLINE
+	CALL	NEWLINE
+	LD	HL,0
+	ADD	HL,SP
+	LD	(OLDSTCK),HL		;Save old stack
+	LD	SP,STACK		;Private stack
+	LD	HL,0			;Empty tree
+	LD	(TREE),HL
+	LD	HL,LISTSP		;Start of list space
+	LD	(PTR),HL
+	LD	A,0
+	LD	(COUNT),A
+	LD	HL,BASE+005DH		;Start of name in F.C.B
+	LD	A,20H
+	CP	(HL)			;Is it a space (no name passed)
+	JP	NZ,NP			;Otherwise skip
+	LD	B,11			;Fill with ?'s
+L1:	LD	(HL),'?'
+	INC	HL
+	DJNZ	L1
+NP:	LD	A,0
+	LD	(BASE+0068H),A		;Write EX field
+	LD	C,17
+	LD	DE,BASE+005CH		;Default file control block
+	CALL	SYSTEM			;Look up for the first time
+	CP	0FFH
+	CALL	NZ,GETNAM
+L2:	LD	C,18
+	LD	DE,BASE+005CH		;Default file control block
+	CALL	SYSTEM			;Look up again
+	CP	0FFH
+	JP	Z,L3
+	CALL	GETNAM
+	JP	L2
+L3:	CALL	FLATT			;Flatten tree
+
+	LD	A,(COUNT)
+	LD	B,A
+	PUSH	BC
+PAGE:	LD	B,22
+LOOPOUT:PUSH	BC
+	LD	B,5
+	LD	IX,P1
+LOOPIN:	PUSH	BC
+	LD	L,(IX)
+	LD	H,(IX+1)		;HL points to name to print
+	PUSH	HL
+	LD	DE,(SCRPTR)		;First unused byte in data area
+	XOR	A			;Clear carry flag
+	SBC	HL,DE
+	POP	HL
+	JR	C,GOON
+	CALL	NEWLINE
+	POP	BC
+	JP	INEND
+GOON:	CALL	PRINTN
+	LD	(IX),L
+	LD	(IX+1),H
+	INC	IX			;Move to next pointer
+	INC	IX
+	POP	BC
+	DEC	B
+	CALL	NZ,SPACE4
+	CALL	Z,NEWLINE
+	JP	NZ,LOOPIN
+INEND:	POP	BC
+	DJNZ	LOOPOUT
+
+	POP	BC
+	LD	A,B
+	SUB	110
+	JP	C,L6
+	JP	Z,L6
+	LD	B,A
+	PUSH	BC			;Page turning section
+	LD	DE,88*11		;Length of a page
+	LD	IX,P1			;First of 5 pointers to change
+	LD	B,5			;Number of pointers
+PAGETN:	LD	L,(IX)
+	LD	H,(IX+1)
+	ADD	HL,DE			;Move pointer
+	LD	(IX),L
+	LD	(IX+1),H
+	INC	IX
+	INC	IX
+	DJNZ	PAGETN
+	LD	HL,MESS4		;Wait for key-press
+	CALL	OUTMESS
+	CALL	WAIT
+	CALL	NEWLINE
+	JP	PAGE
+L6:	LD	A,(COUNT)		;Print number of matches
+	CP	0
+	JP	NZ,L7
+	LD	HL,NO
+	CALL	OUTMESS
+	JP	L8
+	XOR	A			;Restore A to 0
+L7:	CALL	PRNUMB
+	LD	HL,MESS2
+L8:	CP	2
+	JP	NC,L4
+	LD	HL,MESS3		;Singular version
+L4:	CALL	OUTMESS
+	CALL	EXIT
+
+LISTSP	EQU	$			;Room for 200 entries
+SCRATCH	EQU	$+128*15		;Private stack starts here
+STACK	EQU	$+128*15+220*11+128*2
+
+	END
