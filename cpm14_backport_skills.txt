@@ -527,14 +527,22 @@ Notes:
 
   CP/M 2.x returns values in the range:
 
-    0..3
+      0..3
 
   representing entries inside the DMA buffer.
 
-  CP/M 1.4 may return values covering the
-  directory entry number.
+  Some CP/M 1.x implementations return
+  DMA-relative indexes compatible with the
+  CP/M 2.x convention.
 
-  Programs assuming the range 0..3 may fail.
+  Other CP/M 1.x implementations may return
+  values derived from physical directory
+  entry numbers or use implementation-
+  specific conventions.
+
+  Programs deriving DMA offsets directly
+  from BDOS 17/18 return values should be
+  verified on the target system.
 
 Action:
 
@@ -1222,6 +1230,10 @@ Classification:
 RULE E4 - SEARCH FIRST/NEXT INDEX NORMALIZATION (HINT)
 ------------------------------------------------------
 
+Experimental compatibility strategy.
+Apply only after verifying actual Search
+First/Search Next return semantics.
+
 Trigger:
 
   RULE C4
@@ -1296,11 +1308,24 @@ Action:
 
 Notes:
 
-  This is a compatibility hint only.
+  CP/M 2.x commonly returns values in the
+  range:
 
-  Programs already supporting both CP/M 1.4
-  and CP/M 2.x may implement equivalent
-  normalization logic by other means.
+    0..3
+
+  representing entries inside the DMA buffer.
+
+  Some CP/M 1.x implementations return
+  compatible DMA-relative indexes.
+
+  Other implementations may return values
+  derived from physical directory entry
+  numbers or use implementation-specific
+  conventions.
+
+  Programs deriving DMA offsets directly
+  from BDOS 17/18 return values should be
+  verified on the target system.
 
 Classification:
 
