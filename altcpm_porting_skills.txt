@@ -184,6 +184,7 @@ Classification:
 ------------------------------------------------------------------
 
 RULE B2 - FCB INTERNAL FIELD ACCESS
+
 -----------------------------------
 
 Pattern:
@@ -199,18 +200,48 @@ Examples:
   STA 67H
   LHLD 70H
 
-Important:
+Purpose:
 
-  Do NOT automatically translate these
-  addresses by +4200h.
+  Detect references to fields inside the
+  default CP/M FCB structures rather than
+  references to the FCB base address itself.
 
-Some ALTCPM environments preserve CP/M-compatible
-access to default FCB contents at historical
-addresses.
+Notes:
+
+  These addresses may represent:
+
+    - filename field
+    - file type field
+    - EX field
+    - S1/S2 fields
+    - RC field
+    - other FCB members
+
+  The analyzer cannot determine automatically
+  whether the address is:
+
+    - an FCB field that should follow FCB
+      relocation
+
+  or
+
+    - unrelated program data located in the
+      same address range.
 
 Action:
 
   Manual verification required.
+
+  If the address is confirmed to be part of
+  the default FCB structure, relocate it using
+  the same offset applied to the FCB base
+  address.
+
+Examples:
+
+  005Dh -> 425Dh
+  0068h -> 4268h
+  0070h -> 4270h
 
 Classification:
 
