@@ -1,0 +1,447 @@
+/* Released into public domain 1981 P. Scargill */
+/* Modified for compatibility with Microsoft Mac80 relo assembler */
+/* - some orig. labels were reserved words - Bill Soon, Nov. 1981 */
+
+* Beginning of main Adventure database section. Encoded entirely in *
+* the ADVEN language. The file is processed by Microsoft Basic *
+* using the program MAKEADV, then assembled with Macro80 relocating *
+* assembler using the /Z switch (for Z80 code), then linked with *
+* ADVEN80.REL using a link  program such as L80 or LINK80. *
+
+***
+* OBJECT NAME/LOCATION and NAME/DESCRIPTION PAIRS *
+* also PROPERTIES OF OBJECTS and OBJECT DETAILED INFO *
+***
+
+OBJLOC	/* Object locations. The number following the object */
+	/* keyword is the location number where the object */
+	/* will reside at the beginning of the game */
+
+STATUE  4
+KEY  8
+MATCH  5
+LAMP  252
+ULAMP  11
+
+ENDTABLE
+
+OBJDES	/* Object descriptions. The number following the */
+	/* object keyword is the description number from the */
+	/* UMESS table. All objects MUST have both LOCATION  */
+	/* entries and DESCRIPTION entries.		     */
+
+KEY  1
+MATCH  2
+LAMP  3
+ULAMP  4
+STATUE  6
+
+ENDTABLE
+
+OBPROP	/* Legal verbs associated with objects.  */
+	/* Where no properties shown, objects considered to have */
+	/* universal properties. i.e., get drop etc. all work.   */
+	/* Where properties are shown, only those are valid.     */
+
+STATUE LOOK
+ENDTABLE
+
+OBJDSK	/* Where required, an object may have a special */
+ 	/* description. This is optional and may be as long as */
+	/* required, and may include conditionals as in the */
+	/* location tables. */
+
+KEY 'It`s a shiny brass key%'
+MATCH 'an ordinary match&'
+LAMP 'looks like a kerosene lamp to me%'
+STATUE 'this is a statue of Venus%'
+ENDTABLE
+
+***
+* WORDMATCH CONDITION/ACTION SETS *
+***
+
+MATCHW	/* Sets of match pairs, i.e., pairs of keywords, where */
+	/* either word may be the mask ANY, and the second word */
+	/* may be NULL (no word) or INP (replaced at runtime with */
+	/* user input.) */
+	/* An optional TEST section may precede the action entry */
+	/* following the rules of the CONDITION/ACTION tables. */
+	/* An ACTION entry is mandatory, and may allow dropping */
+	/* thru or termination as desired. */
+
+MATCH GET,ANY
+TEST OH,INP
+ACTION TKE,INP,OK
+
+MATCH GET,NULL
+ACTION PRM,39,EXTB
+
+MATCH GET,ANY
+TEST OWC,INP
+ACTION PRM,44,EXTB
+
+MATCH INVEN,NULL
+ACTION INV,EXTB
+
+MATCH LOOK,AROUND
+ACTION GRUN
+
+
+MATCH DROP,ANY
+TEST OWC,INP
+ACTION DR,INP,OK
+
+MATCH DROP,ANY
+ACTION PRM,35,EXTB
+
+MATCH LOOK,NULL
+ACTION LA,EXTB
+
+MATCH LOOK,ANY
+TEST OP,INP
+ACTION DSCOB,INP,EXTB
+
+MATCH QUIT,ANY
+ACTION QT
+
+MATCH HELP,ANY
+ACTION PRM,40,EXTB
+
+MATCH WHO,ANY
+ACTION PRM,41,EXTB
+
+MATCH ON,LAMP
+TEST OC,ULAMP,OC,MATCH
+ACTION SWP,LAMP,FLIP,17,OK
+
+MATCH ON,LAMP
+TEST OC,ULAMP
+ACTION PR,05,EXTB
+
+MATCH OFF,LAMP
+TEST OC,LAMP
+ACTION SWP,LAMP,FLIP,17,OK
+
+MATCH ON,LAMP
+TEST OC,LAMP
+ACTION PRM,42,EXTB
+
+MATCH OFF,LAMP
+TEST OC,ULAMP
+ACTION PRM,42,EXTB
+
+MATCH UNLOCK,ANY
+TEST TF,23,01,OC,KEY,CL,9
+ACTION SF,23,00,OK
+
+MATCH LOCK,ANY
+TEST TF,23,00,OC,KEY,CL,9
+ACTION SF,23,01,OK
+
+MATCH INTO,ANY
+TEST TF,23,00,CL,9
+ACTION MV,11
+
+MATCH YES,ANY
+ACTION PRM,43
+
+MATCH SCORE,ANY
+ACTION SC,EXTB
+
+MATCHALL
+ACTION PRM,37
+
+ENDTABLE
+
+***
+*  STANDARD MESSAGES for SYSTEM USE mainly *
+***
+
+
+MSG   /* The positions of these messages MUST NOT be altered */
+	/* The first 20 are used by the System */
+
+
+1  '>That means nothing to me{@, I`m afraid}{?.} !!%'
+2 ' North'
+3 ' South'
+4 ' East'
+5 ' West'
+6 ' Northeast'
+7 ' Northwest'
+8 ' Southeast'
+9 ' Southwest'
+10 ' Up'
+11 ' Down'
+12 ' In'
+13 ' Out'
+14 'Visible exits are '
+15 '>It`s dark, I can`t see anything{? at all}.'
+    ' It is {@very }dangerous to move in the dark.%'
+16 'I am {@presently }carrying '
+17 'I am wearing '
+18 'I can see '
+19 'nothing special'
+20 '>I don`t {@quite }follow you. Could you try '
+    're-phraseing that....%'
+21 '>I can{@no}{?`}t go {@in that direction.}{?there.}%'
+22 ' right'
+23 ' left'
+24 '>{Ehh!! }That doesn`t make sense{@, buddy} !%'
+25 '>{@I`m sorry, but }I can see no such object here.%'
+26 '>PROGRAM ERROR :-INVALID CONDITION ;;;; %'
+27 '>Quitting with '
+28 ' points.%'
+29 'Ok.%'
+30 'Your{@ present } score is '
+31 '>PROGRAM ERROR :-CANT FIND OBJECT FOR ACTION ;;;; %'
+32 '>PROGRAM ERROR :-INVALID CONDITION %'
+33 '>Try again...I`m not sure which object you mean.%'
+34 '>I am not wearing this item.%'
+35 '>This is not among the items I am carrying.%'
+36 '>I can`t see the object {@you mean }here...%'
+37 '>{?Huh}{@Ehh} !%'
+38 '>Sorry, I can`t {@possibly } carry anything else.%'
+39 '>{?Sorry, I`m not sure from that what '
+   'you want me to get}{@You want what} !%'
+40 'I can`t help you {?at this time}{@I`m afraid}%'
+41 '>Don`t ask silly questions{@, please} !&'
+42 '>{@I believe I already did that !!%}'
+  '{?It is already !!!!%}'
+43 '>Sorry, no chance!%'
+44 'But this is something I`m already carrying!%'
+45 'Looks {@distinctly }ordinary to me!%'
+46 '{?Sorry, that`s quite impossible.}'
+    '{@I`m sorry but I can`t do that.}%'
+
+/* you may expand here if necessary, but preferably */
+/* use the UMESS table for user messages (max 246 */
+ENDTABLE
+
+
+***
+*  User defined messages, expandable up to 246 *
+***
+
+UMESS
+1 'a set of keys'
+2 'some matches'
+3 'an old kerosene lamp'
+4 'old worn out lamp'
+5 'What with..{@ my fingernails??}'      /* note use of  */
+  '{? I`m not carrying any matches!}%'   /* random func. */
+6 'an old dirty statue'
+
+ENDTABLE
+
+
+***
+*  LOCATION DESCRIPTIONS AND EXIT CODES *
+***
+
+LOC	/* Locations with available exit table at start */
+
+1 NORMAL,2,N,2,3,S,10
+  'I am in the grounds of a mansion.%'
+
+2 NORMAL,12,INTO,3,3,S,1,5,W,9
+  'I am at the front of the mansion.%'
+
+
+3 NORMAL,22,RI,4,23,L,5,10,U,6,13,EXIT,2
+  'I am in a long Hallway. The light is dim here as there'
+  ' has been no power here for a long time.%'
+
+4 NOEXIT,13,EXIT,RTN
+  'I am in an old study. There are cobwebs all around.%'
+
+5 NOEXIT,13,EXIT,RTN
+  'I`ve entered some sort of kitchen, by the looks of it. '
+  'There`s a cooker of some kind, and a sink, but everything '
+  'is broken and decayed.%'
+
+6 NORMAL,11,DO,3,3,S,8,22,RI,7,23,L,7,2,N,7,6,NOE,7
+  'I am on a wierd sort of landing, with exits in many '
+  'directions. The floor doesn`t look too safe to me!!%'
+
+7 NOEXIT,13,EXIT,RTN
+  'I am facing a boarded-up door.%'
+
+8 NOEXIT,13,EXIT,RTN
+  'I am in a pink bathroom. The bath has a big crack in it'
+  ' and all the pipes are disconnected and rusted.%'
+
+9 NORMAL,4,EA,2,5,W,10
+  'I am standing outside an old {Alocked-up }wooden '
+  'shed. {AThe windows have been boarded-up.}%'
+
+10 NORMAL,2,N,1,4,EA,9,11,DO,12
+  'I am standing in front of an old well.  It looks like '
+  'I could go down there perhaps.%'
+
+11 NORMAL,13,EXIT,RTN
+  'I am inside an old wooden shed.%'
+
+12 DARK,4,W,13,5,EA,14,10,U,10
+  'I am standing in a low, damp passageway.%'
+
+13 DARK,5,EA,12,2,N,15
+  'I am in a narrow passage. To the North is a dead end.%'
+
+/* Expand up to 246 locations maximum */
+ENDTABLE
+
+
+***
+* KEYS. FIRST 15 ARE RESERVED...MUST NOT BE ALTERED. 'IT'=251 *
+***
+
+
+TABKEY
+
+N  'N   NORT'
+S  'S   SOUT'
+EA  'E   EAST'
+W   'W   WEST'
+NOE 'NE  '
+SE  'SE  '
+NW  'NW  '
+SW  'SW  '
+U   'U   UP  '
+DO  'D   DOWN'
+L  'L   LEFT'
+RI  'R   RIGH'
+INTO  'IN  INTOENTE'
+EXIT  'EXITLEAVOUT '
+LOOK  'LOOKPERUEXAM'
+INVEN  'INVE'
+QUIT  'QUITEND STOPBYE ABOR'
+
+
+GET  'GET GRABTAKECARRPICK'
+DROP  'DROPREMO'
+OPEN  'OPEN'
+LAMP  'LAMP'
+ULAMP
+WEAR  'WEAR'
+LIFT  'LIFTPUSHMOVEPULLYANK'
+MATCH  'MATC'
+SCORE  'SCOR'
+AROUND  'AROUHERE'
+SAY  'SAY YELLSHOUCALLSCRE'
+OFF  'OFF UNLI'
+ON   'ON  LIGHSTRIBURNALIGFIRE'
+HELP  'HELPASSI'
+BEGIN  'BEGISTAR'
+CLOSE  'CLOSSHUT'
+DOOR  'DOOR'
+READ  'READ'
+THROW  'THROHURLCHUC'
+LOCK  'LOCK'
+UNLOCK  'UNLO'
+JUMP  'JUMP'
+FORWARD  'FORW'
+BACKWARD  'BACK'
+BOARD  'NOTIBOARSIGN'
+WHO  'WHO WHENWHATIS  WHERHOW WHY '
+LISTEN  'LISTHEAR'
+NOTE  'NOTE'
+STUDY  'STUD'
+KITCHEN  'KITC'
+STAIRS  'UPSTSTAI'
+ROOM  'ROOM'
+BATH  'BATH'
+KEY  'KEY KEYS'
+SHED  'HUT SHED'
+FRONT  'FRON'
+GROUNDS  'GROU'
+WELL  'WELL'
+YES  'YES '
+CARE  'CAREQUIECLOS'
+STATUE  'STATFIGU'
+
+
+/* IMPORTANT - no more than 246 keys (as many alternatives */
+/* as required, up to one line.   */
+
+ENDTABLE
+
+
+***
+* SIGN-ON MESSAGE. CHANGE AS NECESSARY FOR EACH ADV. *
+***
+
+TITL1
+
+CHR$(26)
+
+'Welcome to ADVEN-80, a new type of Adventure%'
+'game. I will be your eyes and ears in this game as we travel together%'
+'through this journey. If you have problems, please re-phrase%'
+'your sentence. Try asking for help if you like.%'
+' %'
+'Use the RUBOUT or DEL key to backspace over mistakes%'
+'or use Control-U to delete your entire input line%'
+'Hit any key to begin... good luck!'
+
+ENDTABLE
+
+FLAG
+
+1      01	/* If 00 then dark location */
+2      00	/* No. of items carried. (AUTO) */
+3      02	/* Max No. of objects can carry (AUTO) */
+4      00	/* 3 Count up every turn (AUTO) */
+5      00
+6      00
+7      00	/* 3 Count down every turn (AUTO) */
+8      00
+9      00
+10     80	/* 2 Count down if dark & lamp on. (AUTO) */
+11     00
+12     00	/* Counts up if dark & lamp Empty (AUTO) */
+13     00	/* Present Score (MANUAL UPDATE) */
+14     01	/* Present Location (After 1st loc., AUTO) */
+15     00	/* FF (normal) or FE (No directions) (AUTO) */
+16     00	/* Determines if we can see. 00=BLIND. (AUTO) */
+17     01	/* LAMP ON/OFF. ON=00, OFF=01 (MANUAL) */
+18     00	/* No. of items WORN (AUTO) */
+19     00	/* No. of items HERE (AUTO) */
+20     01	/* Last location store (AUTO) */
+21     00	/* 2 Special Test Flags (AUTO) */
+22     00	/* are set complementary at random. */
+23     01	/* 26 Flags (A=Z) for MANUAL text processing. */
+24     00
+25     00	/* Will require init. for individual */
+26     00	/* Adventures. */
+27     00	/* Active any value other than 00. */
+28     00
+29     00
+30     00
+31     00
+32     00
+33     00
+34     00
+35     00
+36     00
+37     00
+38     00
+39     00
+40     00
+41     00
+42     00
+43     00
+44     00
+45     00
+46     00
+47     00
+48     00
+
+
+/* maximum number is 246 - do not skip any numbers. */
+
+ENDTABLE
+
+ENDGAME
+
