@@ -1,0 +1,4644 @@
+
+; THIS VERSION HAS BEEN MODIFIED TO RUN ON "ALTCPM" SYSTEMS
+; IT WON'T RUN ON STANDARD CP/M MACHINES UNLESS AN EMULATION STUB
+; GETS ADDED IN FRONT OF ITS EXECUTABLE BINARY CODE
+
+; IT CAN BE BUILT WITH THE REGULAR Z80ASM PROGRAM USING THE HEX PARAMETER
+; > Z80ASM ZASMB HEX
+; AND COMPLETING THE BUILD WITH NIGH-OWL SOFTWARE LINKER
+
+; QQQ.Z80  -- zasmb assembler, preambles eliminated, edit=false
+;                              and full screen operations eliminated
+;			       Works ok -- R.Gandia, Nome, AK
+;	-- (c) 1985 P.F.Ridler, Zimbabwe
+;
+wboot	equ	4200H
+cdrive	equ	4204H
+bdos 	equ	4205H
+dffcb	equ	425CH
+;
+bel	equ	 7
+tab	equ	 9
+lf	equ	10
+cr	equ	13
+eof	equ	26
+esc	equ	27
+;
+true	equ	1
+false	equ	0
+;
+debugs	equ	false
+;
+notype	equ	0		;expression types
+numtyp	equ	1
+namtyp	equ	2
+strtyp	equ	3
+pctype	equ	4
+onebyt	equ	5
+twobyt	equ	6
+izreg	equ	7
+regtyp	equ	8
+;
+pseudop	equ	14
+;
+codtyp	equ	11H		;line types
+comtyp	equ	12H
+dstyp	equ	13H
+dbtyp	equ	14H
+equtyp	equ	15H
+orgtyp	equ	16H
+;
+addhl	equ	 86H		;some necessary opcodes
+adchl	equ	 8EH
+sbchl	equ	 9EH
+jpopc	equ	0C3H
+;
+creg	equ	11H		;single registers
+areg	equ	17H
+bcreg	equ	20H		;register pairs
+dereg	equ	21H
+hlreg	equ	22H
+spreg	equ	23H
+ixreg	equ	24H
+iyreg	equ	25H
+afreg	equ	26H
+ireg	equ	18H
+rreg	equ	19H
+;
+rmask	equ	10H		;register masks
+rpmask	equ	20H
+;
+maxnch	equ	7		;max. no. of characters in name
+ovrhds	equ	5		;link, address and flag bytes
+;
+bffsiz	equ	512		;no. of bytes in source buffers
+maxlvl	equ	4		;max. level for "include"'s
+edit	equ	false		;set this false if editor interaction
+				; not possible *** Change to false
+;
+;
+	org	4300H
+;
+	jp	zasmb
+;
+ccp	ds	2
+z80ext 	db	'Z80'		;source file extension
+comext 	db	'COM'		;object  "	"
+hexext	db	'HEX'		;"Hex"   "      "
+lstext	db	'LST'		;list	 "	"
+
+;
+nstnt	dw	0		;no. of symtab entries
+nstsr	dw	0		;no. of symtab searches
+taddr	ds	2		;^transfer ("dma") address
+fcb	ds	2		;^fcb to be used
+;
+;
+;	next group of storage must be contiguous
+;
+errflg 	db	' '		;error character for this line
+lnnobf	db	'     '		;holds (5) digits of line number
+	db	'  '
+pcbuff	db	'    '		;holds (4) digits of "pc"
+	db	'  '
+codbff	db	'        '	;holds digits of code
+	db	'  '
+;
+linbff 	ds     80H		;holds source line
+lnbptr 	ds	2		;points to next char in line buffer
+;
+lintyp	ds	1		;type of line to display
+pc 	ds	2		;current program counter
+pcstart	dw	4300H
+pchex	ds	2		;auxiliary pc for "Hex"
+length 	ds	2		;length of current instruction or data
+datfas	ds	2
+inst
+datbff 	ds     80		;current instruction (or data from db)
+passno 	ds	1		;current pass.  pass 1=0, pass 2=-1
+namlth	ds	1		;char count in "nambff"
+nambff 	ds     16		;holds current name
+datlft	ds	1		;no of bytes of data left to display
+regflg	ds	1		;flags if expression is name
+endflg 	ds	1		;end of program flag
+				; (to allow printing of end line)
+havlbl	ds	1		;true if line has label
+opcode 	ds	2		;current opcode from symbol table
+reg1	ds	1		;register code, arg 1
+reg2	ds	1		;register code, arg 2
+savval 	ds	2		;saved contents of "xprval"
+lstflg 	ds	1		;listing flag
+lstcls	ds	1		;list file close flag
+temp 	ds	2		;temp 2 byte area
+mult 	ds	2		;radix of number system
+stfas 	ds	2		;address of next symbol table entry
+stend	ds	2		;last available space for symtab
+udfflg 	ds	1		;undefined flag from "xprshn",
+udfptr	ds	2		;pointer to error col
+nerrs	ds	2		;no. of errors
+lnndx	ds	2		;index to "lineno" for display
+nlines	ds	2		;line number in current segment
+totlns	ds	2		;total no. of lines
+switch	ds	1		;flag to show if i/p file changed
+hexflg	ds	1		;generate "Hex" if true
+;
+;
+; *************** z80asmb.z81   ;was include file *** Ramon
+;
+;
+dspch	push	af		;send character in A to vdu
+	exx
+	ld	c,2
+	ld	e,a
+	call	bdos
+	exx
+	pop	af
+	ret
+;
+;
+dspall	push	af
+	cp	a,' '
+	jr	nc,dspll1
+	add	a,40H
+dspll1	call	dspch
+	pop	af
+	ret
+;
+;
+dsp1hex	push	af
+	and	a,0FH
+	cp	a,10
+	jr	c,dsp1h1
+	add	a,7
+dsp1h1	add	a,30H
+	call	dspch
+	pop	af
+	ret
+;
+;
+dsp2hex	push	af
+	push	af
+	rrca
+	rrca
+	rrca
+	rrca
+	call	dsp1hex
+	pop	af
+	call	dsp1hex
+	pop	af
+	ret
+;
+;
+dsp4hex	push	af
+	ld	a,h
+	call	dsp2hex
+	ld	a,l
+	call	dsp2hex
+	pop	af
+	ret
+;
+;
+dspbyt	push	af		;display A as binary
+	push	bc
+	ld	b,8
+dspbt1	rla
+	push	af
+	ld	a,'0'
+	jr	nc,dspbt2
+	ld	a,'1'
+dspbt2	call	dspch
+	pop	af
+	djnz	dspbt1
+	pop	bc
+	pop	af
+	ret
+;
+;
+dspnxt	ex	(sp),hl		;display data message following call
+	push	af		;terminator is <nul>
+dspnx1	ld	a,(hl)
+	inc	hl
+	or	a,a
+	jr	z,dspnx2
+	call	dspch
+	jr	dspnx1
+dspnx2	pop	af
+	ex	(sp),hl
+	ret
+;
+;
+lstnxt	ex	(sp),hl		;display data message following call
+	push	af		;terminator is <nul>
+lstnx1	ld	a,(hl)
+	inc	hl
+	or	a,a
+	jr	z,lstnx2
+	call	putch
+	jr	lstnx1
+lstnx2	pop	af
+	ex	(sp),hl
+	ret
+;
+;
+;dspnam	push	af		;display content of name buffer
+;	push	hl
+;	push	bc
+;	ld	a,(namlth)
+;	dec	a
+;	jr	z,dspn2
+;	ld	b,a
+;	ld	hl,nambff
+;dspn1	ld	a,(hl)
+;	inc	hl
+;	call	dspch
+;	djnz	dspn1
+;dspn2	pop	bc
+;	pop	hl
+;	pop	af
+;	ret
+
+;
+;
+dspfnm	push	af		;display file name pointed to by HL
+	push	hl
+	push	bc
+	call	crlf
+	ld	c,5
+	ld	a,(hl)
+	inc	hl
+	or	a,a
+	jr	nz,dspfn0
+	ld	a,(4204H)
+	inc	a
+dspfn0	add	a,'`'		;display drive letter
+	call	dspch
+	ld	a,':'
+	call	dspch
+	ld	b,8
+dspfn1	ld	a,(hl)		;display file name
+	inc	hl
+	cp	a,' '
+	jr	z,dspfn11
+	call	uctolc
+	call	dspch
+	inc	c
+dspfn11	djnz	dspfn1
+	ld	a,'.'
+	call	dspch
+	ld	b,3
+dspfn3	ld	a,(hl)		;display file type
+	inc	hl
+	cp	a,' '
+	jr	z,dspfn4
+	call	uctolc
+	call	dspch
+	inc	c
+	djnz	dspfn3
+dspfn4	call	dspnxt
+	db	'  ',0
+	ld	a,c
+	ld	(ndots),a
+	pop	bc
+	pop	hl
+	pop	af
+	ret
+;
+;
+movfnm	ld	hl,(pipfcb)		;move file name pointed to "fcb" to
+	ld	a,(hl)			;  CCP buffer
+	inc	hl
+	or	a,a
+	jr	nz,movfn0
+	ld	a,(cdrive)
+	inc	a
+movfn0	add	a,'@'		;drive letter
+;	call	dspch
+	ld	(de),a
+	inc	de
+	inc	c
+	ld	a,':'
+;	call	dspch
+	ld	(de),a
+	inc	de
+	inc	c
+	ld	b,8
+movfn1	ld	a,(hl)		;file name
+	inc	hl
+	cp	a,' '
+	jr	z,movfn11
+;	call	dspch
+	ld	(de),a
+	inc	de
+	inc	c
+movfn11	djnz	movfn1
+	ld	a,'.'
+;	call	dspch
+	ld	(de),a
+	inc	de
+	inc	c
+	ld	b,3
+movfn3	ld	a,(hl)		;file type
+	inc	hl
+	cp	a,' '
+	jr	z,movfn4
+;	call	dspch
+	ld	(de),a
+	inc	de
+	inc	c
+	djnz	movfn3
+movfn4	ld	a,0
+	ld	(de),a
+;	call	press
+	ret
+;
+;
+press	call	dspnxt
+	db	bel,' Press <sp>',0
+	call	getch
+	cp	a,esc
+	jp	z,abort
+	ret
+;
+;
+crlf	call	dspnxt		;send <cr><lf> to vdu
+	db	cr,lf,0
+	ret
+;
+;
+getch	exx			;get, and echo, character from keyboard
+	ld	c,1
+	call	bdos
+	exx
+	ret
+;
+;
+;chkkbd	exx
+;	ld	c,6
+;	ld	e,-1
+;	call	bdos
+;	exx
+;	ret
+
+chkkbd	exx
+	ld	hl,(wboot+1)
+	ld	l,6    ; CONST
+	call	gohl
+	or	a
+;	ret	z
+;	ld      l,9	; CONIN
+;	call	gohl
+	exx
+	ret
+
+gohl	jp	(hl)
+
+;
+;
+uctolc	cp	a,'Z'+1		;translate U/C letters to l/c
+	ret	nc
+	cp	a,'A'
+	ret	c
+	add	a,20H
+	ret
+;
+;
+lctouc	cp	a,'z'+1		;translate l/c letters to U/C
+	ret	nc
+	cp	a,'a'
+	ret	c
+	sub	a,20H
+	ret
+;
+;
+readch	push	hl		;get next non-space character
+	ld	hl,(lnbptr)
+rdch1	ld	a,(hl)
+	inc	hl
+	cp	a,' '
+	jr	z,rdch1		;skip blanks
+	cp	a,tab
+	jr	z,rdch1		;skip tabs
+	ld	(lnbptr),hl
+	call	uctolc		;return l/c char
+	pop	hl
+	ret
+;
+;
+hasher	push	de		;get hash key. needs ^name
+	push	bc		;returns hash key in HL
+	ld	a,(hl)		;length
+	dec	a		;don't hash length byte
+	ld	b,a
+	inc	hl		;^start of name
+hash1	add	a,(hl)
+	inc	hl
+	djnz	hash1
+	ld	h,0
+	ld	l,a
+	add	hl,hl		;  double for 16 bit address entry (0..512)
+	ld	de,hshtbl
+	add	hl,de
+	pop	bc
+	pop	de
+	ret
+;
+;
+follow	push	de		;follow linked chain in "symtab"
+fllw1	ld	d,0		;HL=^st from "hasher"
+	ld	e,(hl)		;length
+	add	hl,de		;HL=^link
+	ld	e,(hl)		;link low byte
+	inc	hl
+	ld	d,(hl)		;link high byte
+	xor	a,a
+	cp	a,d
+	jr	z,fllw2		;end of chain if high byte=0
+	ex	de,hl		;HL=^next entry in chain
+	jr	fllw1
+fllw2	pop	de		;return HL ^length of entry beyond end of chain
+	ret
+;
+;
+;	ptn2st - enter a symbol into the symbol table
+;
+;	entry format:	length		(1 byte)
+;			n a m e ...  	(up to 254 bytes)
+;			address		(2 bytes)
+;			type		(1 byte)
+;
+;	on return HL points to value low byte in new entry for possible
+;	further update (used by equ pseudo operator)
+;
+;
+ptn2st	push	de
+	push	bc
+	ld	hl,(nstnt)	;count number of entries for tests
+	inc	hl
+	ld	(nstnt),hl
+	ld	hl,(stfas)	;if no space then fatal error
+	ld	d,0
+	ld	a,(stbuff)
+	add	a,5		;allow for link, address and flags
+	ld	e,a
+	add	hl,de
+	ld	de,(stend)
+	call	cphlde
+	jp	c,ptst1
+	call	dspnxt
+	db	cr,lf,lf,bel,'Symbol table full.',0
+	call	press
+	jp	abort		;else
+ptst1	ld	hl,stbuff
+	call	hasher		;  HL=^symtab
+	inc	hl		;  if high byte of hash table=0
+	ld	a,(hl)		;        (low byte could be zero anyway!)
+	or	a,a
+	jr	nz,ptst2
+	ld	de,(stfas)	;    put "stfas" into hash table
+	ld	(hl),d
+	dec	hl
+	ld	(hl),e
+	jr	ptst3		;  else
+ptst2	ld	d,a		;HL ^high byte of hash table
+	dec	hl
+	ld	e,(hl)
+	ex	de,hl		;HL ^length byte of st entry
+	call	follow		;returns HL=^link to high byte of last entry
+	ld	de,(stfas)	;  in chain
+				; update link to allow for new entry
+	ld	(hl),d
+	dec	hl
+	ld	(hl),e
+ptst3	ld	hl,stbuff	;  move "stbuff" to "stfas"
+	ld	de,(stfas)
+	ld	b,0
+	ld	a,(stbuff)	;  length
+	add	a,5		;  overheads
+	ld	c,a
+	ldir
+	ld	hl,(stfas)	;  update "stfas"
+	ld	d,0
+	ld	a,(stbuff)	;length
+	add	a,5		;overheads
+	ld	e,a
+	add	hl,de
+	ld	(stfas),hl	;HL=^first available space in "symtab"
+	dec	hl
+	dec	hl
+	dec	hl		;HL=^low byte of address
+	pop	bc
+	pop	de
+	ret
+;
+;
+opsrch	push	de		;search operator table
+	push	bc
+	ld	a,(nambff)	;hash using first character of name
+	sub	a,'a'
+	ld	e,a
+	ld	d,0
+	ld	hl,opcndx	;address of op-code index
+	add	hl,de
+	add	hl,de		;^address of list
+	ld	e,(hl)
+	inc	hl
+	ld	d,(hl)
+	ex	de,hl		;address of list
+	ld	b,(hl)		;number of operators in list
+	inc	hl		;^first operator in list
+	ld	de,namlth	;point to token
+opsr1	push	bc
+	call	cpstrg
+	jr	z,opsr2
+	ld	a,(hl)
+	add	a,3
+	ld	b,0
+	ld	c,a
+	add	hl,bc
+	pop	bc
+	djnz	opsr1
+	inc	b		;not found, so reset Z
+	jr	opsr3
+opsr2	pop	bc
+	ld	c,(hl)
+	ld	b,0
+	add	hl,bc
+	xor	a,a		;set Z to show operator found
+opsr3	pop	bc
+	pop	de
+	ret
+;
+;
+ctsrch	push	hl		;search condition table serially
+	push	de
+	push	bc
+	ld	hl,namlth	;^name length
+	ld	de,cndtbl	;^condition table
+	ld	b,8		;8 condition codes
+ctsr1	call	cpstrg		;if (name==<cc>)
+	jr	z,ctsr2
+	inc	de		;else
+	inc	de		;  next code
+	inc	de
+	ld	a,8
+	djnz	ctsr1
+ctsr2	ld	a,8		;return <cc> number
+	sub	a,b
+	pop	bc
+	pop	de
+	pop	hl
+	ret
+;
+;
+;	stsrch - look up symbols in table
+;
+;	on return Z reset means symbol not found.
+;		  Z set   means symbol found.
+;		  HL points to low byte of address in table entry
+;
+flgadd	ds	2
+;
+stsrch	ld	hl,(nstsr)	;count searches for test
+	inc	hl
+	ld	(nstsr),hl
+	ld	hl,namlth	;^name (length byte)
+	call	hasher		;returns HL ^hash table
+	inc	hl		;if high byte of hash table entry=0
+	ld	a,(hl)
+	or	a,a		;  not in st
+	jr	z,stch3
+	ld	d,a		;else
+	dec	hl
+	ld	e,(hl)
+	ex	de,hl		;HL holds ^length byte of start of chain
+stch1	ld	de,namlth	;point to length byte of name
+	call	cpstrg
+	jr	z,stch2
+	ld	d,0		;add length to get to link
+	ld	e,(hl)
+	add	hl,de
+	ld	e,(hl)		;low byte of link
+	inc	hl
+	ld	d,(hl)		;if high byte=0 then
+	xor	a,a
+	cp	a,d
+	jr	z,stch3		;at end of chain, so not found
+	ex	de,hl		;HL=^next entry in chain
+	jr	stch1
+	;
+stch2	ld	d,0		;if name found
+	ld	e,(hl)
+	add	hl,de		;  HL=^link
+	inc	hl		;  skip link
+	inc	hl
+	push	hl		;  HL=^low byte of address
+	inc	hl		;  skip address
+	inc	hl
+	ld	(flgadd),hl	;  store ^flag byte
+	ld	a,(hl)
+	and	a,80H		;  isolate multiple definition bit
+	pop	hl		;  recover ^low byte of address
+	jr	z,stch21
+	call	merror
+stch21	xor	a,a		;  set Z
+	jr	stch4
+stch3	inc	a		;else reset Z
+stch4	ret
+;
+;
+;	The next group of subroutines is for the output listing
+;
+asmpc	push	hl		;assemble a "equ $" type line for listing
+	push	de
+	ld	hl,(pc)
+	ld	de,pcbuff
+	ld	a,h
+	call	cnv2hex
+	ld	a,l
+	call	cnv2hex
+	pop	de
+	pop	hl
+	ret
+;
+;
+asmval	push	hl		;put value into buffer for listing
+	push	de
+	ld	hl,(xprval)
+	ld	de,codbff
+	ld	a,'('
+	ld	(de),a
+	inc	de
+	ld	a,h
+	call	cnv2hex
+	ld	a,l
+	call	cnv2hex
+	ld	a,')'
+	ld	(de),a
+	pop	de
+	pop	hl
+	ret
+;
+;
+asmcod	push	hl		;put code into buffer for listing
+	push	de
+	ld	a,(length)
+	or	a,a
+	jr	z,asmc2
+	ld	b,a
+	ld	hl,inst
+	ld	de,codbff
+asmc1	ld	a,(hl)
+	inc	hl
+	call	cnv2hex
+	djnz	asmc1
+asmc2	pop	de
+	pop	hl
+	ret
+;
+;
+asmdat	ld	hl,(datfas)	;assemble a "db" or "dw" line
+	ld	de,codbff
+	ld	a,(datlft)	;if (dataleft<>0)
+	or	a,a
+	jr	z,asmd2
+	cp	a,5		;  if (dataleft>4)
+	jr	c,asmd1
+	sub	a,4		;    dataleft=dataleft-4
+	ld	b,4
+	jr	asmd11
+asmd1	ld	b,a		;  else 
+	xor	a,a
+asmd11	ld	(datlft),a	;    dataleft=0
+	ld	c,b		;  pass to display
+asmd12	ld	a,(hl)
+	inc	hl
+	call	cnv2hex		;  convert to ASCII and move to "codbff"
+	djnz	asmd12
+asmd2	ld	(datfas),hl
+	ret
+;
+;
+blkpcb	ld	b,4		;blank the pc position for display
+	ld	hl,pcbuff
+	ld	a,' '
+blkp1	ld	(hl),a
+	inc	hl
+	djnz	blkp1
+	ret
+;
+;
+blkcdb	ld	b,8		;blank the code position
+	ld	hl,codbff
+	ld	a,' '
+blkc1	ld	(hl),a
+	inc	hl
+	djnz	blkc1
+	ret
+;
+;	asmlin - assemble line for listing
+;
+asmlin	;line display type
+	;  2  lineno 			comment,list
+	;  5  	"             (value)	equ
+	;  6	"	pc		org
+	;  1	"	pc     code	normal line
+	;  3	"	pc     value	ds
+	;  4	"	pc     data	db,dw
+	;
+	call	blkcdb		;blank code buffer
+	call	blkpcb		;blank pc buffer
+	ld	hl,(nlines)
+	ld	de,lnnobf	;space for error letter
+	call	decval		;line number (always)
+	;
+	ld	a,(lintyp)
+	cp	a,codtyp
+	jr	nz,asml2
+	call	asmpc		;line  pc   code      op    arg  
+	call	asmcod
+	jr	asml9
+asml2	cp	a,comtyp	;line                 list|comment
+	jr	nz,asml3
+	jp	asml9
+asml3	cp	a,dstyp		;line  pc  (length)   ds   length
+	jr	nz,asml4
+	call	asmpc
+	call	asmval
+	jp	asml9
+asml4	cp	a,dbtyp		;line  pc  data	     db	   data
+	jr	nz,asml5
+	call	asmpc
+	ld	hl,datbff
+	ld	(datfas),hl
+	call	asmdat
+	jr	asml9
+asml5	cp	a,equtyp	;line     (value)    equ   value
+	jr	nz,asml6
+	call	blkpcb
+	call	asmval
+	jp	asml9
+asml6	call	asmpc		;line  pc           org     pc
+	call	blkcdb
+asml9	ret
+;
+;
+putch	call	wrlist
+	ret
+;
+;
+op2lst	ld	hl,wrlist	;change list device to console
+	ld	(putch+1),hl
+	ret
+;
+;
+op2vdu	ld	hl,dspch	;change list device to console
+	ld	(putch+1),hl
+	ret
+;
+;
+errptr	dw	linbff
+errch	dw	0		;no. of erroneous character
+;
+lsterr	push	af
+	push	bc
+	ld	a,true		;list close=true
+	ld	(lstcls),a
+	call	lstnxt
+	db	cr,lf,'                        ',0	;must be 24
+	ld	hl,linbff
+	ld	c,0
+	ld	de,(errptr)
+	dec	de
+lstr1	call	cphlde
+	jp	p,lstr13
+
+;	jp	m,lstr13
+
+	inc	c
+	ld	a,(hl)
+	inc	hl
+	cp	a,tab
+	jr	z,lstr12
+	ld	a,' '
+lstr12	call	putch
+	jr	lstr1
+lstr13	call	lstnxt		;display error message
+	db	'^ ',0
+	ld	a,c
+	ld	(errch),a
+	pop	bc
+	pop	af
+	;
+	cp	a,'A'		;Argument
+	jr	nz,lstr31
+	call	lstnxt
+	db	'Argument error',0
+	jp	lstr49
+	;
+lstr31	cp	a,'B'
+	jr	nz,lstr32
+	call	lstnxt
+	db	'"org" is backwards',0
+	jp	lstr49
+	;
+lstr32	cp	a,'F'		;File not found
+	jr	nz,lstr33
+	call	lstnxt
+	db	'Cannot find "include" file',0
+	jp	lstr49
+	;
+lstr33	cp	a,'I'		;Incomplete line
+	jr	nz,lstr34
+	call	lstnxt
+	db	'Incomplete line',0
+	jp	lstr49
+	;
+lstr34	cp	a,'L'		;Lable
+	jr	nz,lstr35
+	call	lstnxt
+	db	'Label error',0
+	jp	lstr49
+	;
+lstr35	cp	a,'M'		;Multiple
+	jr	nz,lstr36
+	call	lstnxt
+	db	'Multiple definition',0
+	jp	lstr49
+	;
+lstr36	cp	a,'O'		;Op-code
+	jr	nz,lstr37
+	call	lstnxt
+	db	'Op-code error',0
+	jp	lstr49
+	;
+lstr37	cp	a,'R'
+	jr	nz,lstr38
+	call	lstnxt
+	db	'Range error',0
+	jp	lstr49
+;
+lstr38	cp	a,'S'		;Syntax error
+	jr	nz,lstr39
+	call	lstnxt
+	db	'Syntax error',0
+	jp	lstr49
+	;
+lstr39	cp	a,'U'		;Undefined
+	jr	nz,lstr40
+	call	lstnxt
+	db	'Undefined name',0
+	jp	lstr49
+	;
+lstr40	cp	a,'V'		;Value error
+	jr	nz,lstr41
+	call	lstnxt
+	db	'Value error',0
+	jp	lstr49
+	;
+lstr41	cp	a,'X'		;eXtra character
+	jr	nz,lstr42
+	call	lstnxt
+	db	'Extra character "'
+xch	db	'X"',0
+	jp	lstr49
+	;
+lstr42
+	;
+lstr49	ret
+;
+;
+zedit	db	6,'ZEDIT '
+;
+dsperr	ld	a,(errflg)	;display error on vdu
+	call	op2vdu		;switch o/p to vdu
+	call	lsterr		;display error
+	call	op2lst		;revert to list file
+	call	dspnxt
+	db	cr,lf,bel,'Edit,Continue or Quit? (E|C|Q) ',0
+	call	getch
+	call	uctolc
+	cp	a,'e'
+	jp	nz,dspr51
+	;
+	if 	edit
+	;
+	ld	hl,(ccp)	;put "nlines" into CCP+84H
+	ld	de,84H
+	add	hl,de
+	ld	de,(nlines)	
+	ld	(hl),e
+	inc	hl
+	ld	(hl),d
+	inc	hl
+	ld	de,(errch)	;set nch
+	ld	(hl),e
+	inc	hl
+	ld	(hl),d
+	ld	hl,(ccp)	
+	ld	de,7
+	add	hl,de
+	ex	de,hl
+	ld	hl,zedit	;put "zedit d:filename.ext" into CCP buffer
+	ld	b,0
+	ld	a,(zedit)
+	ld	c,a
+	inc	bc
+	ldir
+	call	movfnm
+	ld	hl,(ccp)	;reset CCP bufferptr
+	ld	de,8
+	add	hl,de
+	ex	de,hl
+	ld	hl,(ccp)
+	ld	bc,88H
+	add	hl,bc
+	ld	(hl),e
+	inc	hl
+	ld	(hl),d
+	ld	c,3		;relate to drive in CCP buffer
+	ld	hl,(ccp)	;jp ccp
+	jp	(hl)
+	;
+	endif
+	;
+dspr51	cp	a,'c'
+	jr	z,dspr52
+	cp	a,'q'
+	jp	z,wboot
+dspr52	xor	a,a
+	ld	(ndots),a
+	ret
+;
+;
+lstlin	push	hl		;write a line of code
+	push	de
+	push	bc
+	ld	a,cr
+	call	putch
+	ld	a,lf
+	call	putch
+	ld	a,(length)	;data_left=length
+	ld	(datlft),a
+	call	asmlin		;assemble the line
+	ld	b,0		;display line
+	ld	hl,errflg
+lstl1	ld	a,(hl)		;get character
+	inc	hl
+	ld	c,a		;store it
+	cp	a,cr
+	jr	z,lstl2
+	inc	b		;column count
+	cp	a,tab
+	jr	nz,lstl12
+lstl11	ld	a,b		;adjust for tabs
+	and	a,07H
+	jr	z,lstl12
+	ld	a,' '
+	call	putch
+	inc	b
+	jr	lstl11
+lstl12	ld	a,79
+	cp	a,b
+	jp	m,lstl2
+	ld	a,c		;retreive character
+	call	putch		;display or list it
+	jr	lstl1
+lstl2	ld	a,(lintyp)
+	cp	a,dbtyp
+	jr	nz,lstl3
+lstl21	ld	a,(datlft)	;if (dataleft<>0)
+	or	a,a
+	jr	z,lstl3
+	call	asmdat
+	ld	a,cr
+	call	putch
+	ld	a,lf
+	call	putch
+	ld	a,' '
+	ld	b,14
+lstl22	call	putch
+	djnz	lstl22
+	ld	a,c		;  no. of bytes from "asmdat"
+	add	a,a		;  no. of hex digits
+	ld	hl,codbff
+	ld	b,a
+lstl23	ld	a,(hl)
+	inc	hl
+	call	putch
+	djnz	lstl23
+	jr	lstl21
+lstl3	pop	bc
+	pop	de
+	pop	hl
+	ret
+;
+;
+dsplin	call	op2vdu		;send to vdu
+	call	lstlin
+	call	op2lst		;reset to .LST file
+	ret
+;
+;
+chdsp	db	'.'		;character to display
+ndots	db	0
+;
+dspdot	push	af		;show the progress of the assembly
+	call	chkkbd		;read(ch)
+	; cp	a,esc		;if (ch==esc) abort
+	; jp	z,abort
+	jp	nz,abort
+dspdt1	ld	a,(nlines)	;if ((nlines mod 16)==0)
+	and	a,01FH
+	jr	nz,dspdt3
+	ld	a,(chdsp)	;  write('.')
+	call	dspch
+	ld	a,(ndots)	;  ndots=ndots+1
+	inc	a
+	cp	a,78		;  if (ndots==78)
+	jp	m,dspdt2
+	call	crlf		;    writeln
+	xor	a,a		;    ndots=0
+dspdt2	ld	(ndots),a
+dspdt3	pop	af
+	ret
+;
+;
+divide	or	a,a		;primitive repeated subtraction divide
+	ld	b,-1		;HL/DE  8-bit result in A
+divid1	sbc	hl,de
+	inc	b
+	jr	nc,divid1
+	add	hl,de
+	ld	a,b
+	ret
+;
+;
+div16	push	af
+	push	bc
+	ld	a,h
+	ld	c,l
+	ld	hl,00
+	ld	b,16
+div1	rl	c
+	rla
+	adc	hl,hl
+	sbc	hl,de
+	jr	nc,div2
+	add	hl,de
+div2	ccf
+	djnz	div1
+	rl	c
+	rla
+	ex	de,hl		;remainder
+	ld	h,a
+	ld	l,c
+	pop	bc
+	pop	af
+	ret
+;
+;
+dspdec	push	hl		;display decimal digits from buffer
+	push	de		; pointed to by HL
+	push	bc
+	ld	c,0		;leading blank flag
+	ld	b,5		;only five digits
+dpdc1	ld	a,(hl)
+	inc	hl
+	cp	a,' '
+	jr	nz,dpdc2
+	ld	d,a		;save digit
+	ld	a,c		;leading blank?
+	or	a,a
+	jr	z,dpdc3
+	ld	a,d		;restore digit
+dpdc2	call	dspch
+	inc	c		;reset leading blank flag
+dpdc3	djnz	dpdc1
+	pop	bc
+	pop	de
+	pop	hl
+	ret
+;
+;
+putdig	cp	a,0		;move digits of number to "lnbuff"
+	jr	nz,ptdg1	;if digit<>'0' then move it anyway
+	cp	a,c		;elseif it is a leading zero
+	jr	nz,ptdg1
+	ld	a,' '-30H	;  move " " instead
+	jr	ptdg2
+ptdg1	inc	c		;reset leading zero flag
+ptdg2	add	a,30H
+	push	hl
+	ld	hl,(lnndx)
+	ld	(hl),a
+	inc	hl
+	ld	(lnndx),hl
+	pop	hl
+	ret
+;
+;
+decval	push	hl		;put value of HL as decimal digits into ^DE
+	push	de
+	push	bc
+	ld	(lnndx),de
+	ld	c,0		;leading zero flag
+	ld	de,10000	;10 000's
+	call	divide
+	call	putdig
+	ld	de,1000		;1000's
+	call	divide
+	call	putdig
+	ld	de,100		;100's
+	call	divide
+	call	putdig
+	ld	de,10		;10's
+	call	divide
+	call	putdig
+	ld	a,l		;1's
+	ld	c,1		;always display last digit
+	call	putdig
+	pop	bc
+	pop	de
+	pop	hl
+	ret
+;
+;
+inifcb	push	de		;initialise fcb pointed to by DE
+	ld	b,12
+	ld	a,' '
+nfcb1	ld	(de),a
+	inc	de
+	djnz	nfcb1
+	ld	b,24
+	ld	a,0
+nfcb2	ld	(de),a
+	inc	de
+	djnz	nfcb2
+	pop	de
+	ret
+;
+;
+opnfil	exx			;open file control block
+	ld	de,(fcb)
+	ld	c,15
+	call	bdos
+	inc	a		;returns Z set if nbg
+	exx
+	ret
+;
+;
+;
+clsfil	exx			;close file
+	ld	c,16
+	ld	de,(fcb)
+	call	bdos
+	inc	a		;return Z set if nbg
+	exx
+	ret
+;
+;
+delfil	exx			;delete file
+	ld	c,19
+	ld	de,(fcb)
+	call	bdos
+	inc	a		;return Z set if nbg
+	exx
+	ret
+;
+;
+rdrcrd	exx			;read record
+	ld	c,20
+	ld	de,(fcb)
+	call	bdos
+	or	a,a		;return Z set if ok
+	exx
+	ret
+;
+;
+wrrcrd	exx			;write record
+	ld	c,21
+	ld	de,(fcb)
+	call	bdos
+	or	a,a		;return Z set if ok
+	exx
+	ret
+;
+;
+crtfil	exx			;create new file
+	ld	c,22
+	ld	de,(fcb)
+	call	bdos
+	inc	a		;return Z set if nbg
+	exx
+	ret
+;
+;
+dmaset	exx			;set memory transer address
+	ld	c,26
+	ld	de,(taddr)
+	call	bdos
+	exx
+	ret
+;
+;
+cpstrg	push	hl		;compare strings pointed to by HL and DE
+	push	de		;the strings have their lengths in their
+	push	bc		;first bytes
+	ld	b,(hl)
+cpst1	ld	a,(de)
+	cp	a,(hl)
+	jp	nz,cpst2	;not same, return
+	inc	hl
+	inc	de
+	djnz	cpst1
+	xor	a,a		;set Z to show same
+cpst2 	pop	bc
+	pop	de
+	pop	hl
+	ret
+;
+;
+;
+mltply	push	de		;DE,HL=DE*HL
+	push	bc
+	ld	b,h
+	ld	c,l
+	ld	hl,00		;HL holds product
+	ld	a,16		;bit counter
+mult1	add	hl,hl		;shift DE,HL left
+	ex	de,hl
+	adc	hl,hl
+	ex	de,hl
+	jr	nc,mult2
+	add	hl,bc		;have multiplier bit
+	jr	nc,mult2
+	inc	de		;carry into DE
+mult2	dec	a
+	jr	nz,mult1
+	pop	bc
+	pop	de
+	ret
+;
+;
+cphlde	push	hl		;compare HL and DE. returns flags
+	or	a,a
+	sbc	hl,de
+	pop	hl
+	ret
+;
+;
+getbyt	push	hl		;get a byte from the input buffer
+	push	de
+	ld	hl,(ipbend)	;see if end of buffer
+	ld	de,(ipbndx)
+	or	a,a
+	sbc	hl,de
+	ex	de,hl
+	jr	nz,gtbt2	;if at end of buffer
+	push	bc		;  fill buffer from disc
+	ld	hl,(ipbuff)
+	ld	b,bffsiz/128	;  for i=1 to buffer_size/128
+gtbt1	ld	(taddr),hl
+	call	dmaset		;    set up transfer address
+	ld	de,(pipfcb)
+	ld	(fcb),de
+	call	rdrcrd		;    go read a sector
+	jr	z,gtbt11
+	ld	(hl),eof	;    if eof put it into buffer
+	ld	b,1
+gtbt11	ld	de,128
+	add	hl,de
+	djnz	gtbt1
+	pop	bc
+	ld	hl,(ipbuff)
+gtbt2	ld	a,(hl)		;return byte in A
+	inc	hl
+	ld	(ipbndx),hl
+gtbt21	pop	de
+	pop	hl
+	ret
+;
+;
+wrbyte	push	hl		;put byte in A into output buffer
+	push	de
+	push	af
+	ld	a,(objfas)	;if output buffer full
+	cp	a,128
+	jp	nz,wrbt2
+	ld	de,objbff	;  set transfer address
+	ld	(taddr),de
+	call	dmaset
+	ld	de,objfcb
+	ld	(fcb),de
+	call	wrrcrd		;  write record
+	jp	z,wrbt1  	;  if write error
+	call	dspnxt
+ 	db	cr,lf,'Output-file write error (disc may be full)',0
+	call	press
+	jp	abort
+wrbt1	xor	a,a		;  objfas=0
+wrbt2	ld	hl,objbff	;  objfas=objfas+1
+	ld	d,0
+	ld	e,a
+	add	hl,de
+	inc	a
+	ld	(objfas),a
+	pop	af
+	ld	(hl),a		;put byte into buffer
+	pop	de
+	pop	hl
+	ret
+;
+;
+;
+;
+dsphch	push	af
+	cp	a,cr
+	jr	nz,dsphch1
+	ld	a,'M'
+	jr	dsphch3
+dsphch1	cp	a,lf
+	jr	nz,dsphch2
+	ld	a,'J'
+	jr	dsphch3
+dsphch2	cp	a,' '
+	jr	nc,dsphch3
+	ld	a,'#'
+dsphch3	call	dspch
+	pop	af
+	ret
+;
+;
+dbhex	ld	hl,hexbuff
+	ld	a,(hl)
+	inc	hl
+	call	crlf
+	call	dsphch		;':'
+	call	dspblk
+	ld	b,4		;count,load address,mode
+dbhex1	ld	a,(hl)
+	inc	hl
+	call	dsphch
+	ld	a,(hl)
+	inc	hl
+	call	dsphch
+	call	dspblk
+	djnz	dbhex1
+	call	crlf
+
+dbhex2	ld	a,(hxbfcnt)
+	srl	a
+	or	a,a
+	jr	z,dbhex29
+	ld	b,a
+	ld	c,0
+dbhex21	ld	a,(hl)
+	inc	hl
+	call	dsphch
+	ld	a,(hl)
+	inc	hl
+	call	dsphch
+	call	dspblk
+	inc	c
+	dec	b
+	jr	z,dbhex29
+	ld	a,14
+	cp	a,c
+	call	z,crlf
+	jr	dbhex21
+dbhex29
+
+	call	crlf
+	ld	b,2
+dbhex4	ld	a,(hl)
+	inc	hl
+	call	dsphch
+	ld	a,(hl)
+	inc	hl
+	call	dsphch
+	call	dspblk
+	djnz	dbhex4
+	call	dspnxt
+	db	'     Press <sp> ',0
+	call	getch
+	call	crlf
+	ret
+;
+;
+hexbuff	db	':'				; 0
+	db	0,0				; 1 count
+	db	0,0,0,0				; 3 load address
+	db	0,0				; 7 mode (=00)
+	db	'############################'	; 9 data
+	db	'############################'	;37
+	db	0,0				;65 checksum
+	db	cr,lf				;67 terminator
+;
+hxbffas	dw	hexbuff+9
+hxbfcnt	db	0
+ldaddr	dw	100H		;change later !!!!!!! to "org" address
+chksum	db	0
+;
+;				complete hex record, then write it
+wrhxbff	push	hl
+	push	de
+	ld	a,(hxbfcnt)	;checksum=checksum+hxbffcnt/2
+	ld	b,a
+	srl	b
+	ld	a,(chksum)
+	add	a,b
+	ld	(chksum),a
+	ld	a,(hxbfcnt)	;if (hxbfcnt==0)
+	or	a,a
+	jr	nz,wrhex2
+	ld	a,'0'
+	ld	b,10
+	ld	hl,hexbuff+1
+wrhex1	ld	(hl),a		;  for i=1 upto 10
+	inc	hl		;    hexbuff[i]='0'
+	djnz	wrhex1
+	ld	a,cr
+	ld	(hl),a
+	inc	hl
+	ld	a,lf
+	ld	(hl),a
+	jp	wrhex3		;else
+wrhex2	ld	a,(hxbfcnt)	;  hexbuff[1,2]=hexit(count)
+	srl	a
+	call	hexit
+	ld	(hexbuff+1),bc
+	ld	hl,(ldaddr)	;  hexbuff[3..6]=load_address
+	ld	a,(chksum)
+	add	a,l
+	add	a,h
+	ld	(chksum),a
+	ld	a,h
+	call	hexit
+	ld	(hexbuff+3),bc
+	ld	a,l
+	call	hexit
+	ld	(hexbuff+5),bc
+	ld	a,'0'		;  hexbuff[7,8]='0'
+	ld	(hexbuff+7),a
+	ld	(hexbuff+8),a
+	ld	a,(chksum)
+	neg			;  checksum=-checksum
+	call	hexit
+	ld	hl,hexbuff+9	;  hexbuff[hexbuffcount+7,8]=checksum
+	ld	d,0
+	ld	a,(hxbfcnt)
+	ld	e,a
+	add	hl,de
+	ld	(hl),c
+	inc	hl
+	ld	(hl),b
+	inc	hl
+	ld	(hl),cr		;  hexbuff[hexbuffcnt+9,10]=crlf
+	inc	hl
+	ld	(hl),lf
+	xor	a,a
+	ld	(chksum),a	;checksum=0
+	ld	hl,hexbuff+9	;hexbuffpointer=hexbuff+9
+	ld	(hxbffas),hl
+	ld	hl,(pchex)	;load_address=pc
+	inc	hl
+	ld	(ldaddr),hl
+wrhex3	ld	a,(hxbfcnt)	;for i=0 to hexbuffcount+12
+	add	a,13
+	ld	b,a
+	ld	hl,hexbuff
+wrhex31	ld	a,(hl)
+	inc	hl
+	call	wrbyte		;  write(hexbuff[i])
+	djnz	wrhex31
+wrhex9
+;	call	dbhex
+
+	xor	a,a		;hxbfcount=0
+	ld	(hxbfcnt),a
+	pop	de
+	pop	hl
+	ret
+;
+;
+dspblk	call	dspnxt
+	db	' ',0
+	ret
+;
+;
+hexit	push	af
+	push	af
+	rrca
+	rrca
+	rrca
+	rrca
+	and	a,0FH
+	cp	a,10
+	jr	nc,hexit1
+	add	a,'0'
+	jr	hexit2
+hexit1	add	a,'A'-10
+hexit2	ld	c,a
+	pop	af
+	and	a,0FH
+	cp	a,10
+	jr	nc,hexit3
+	add	a,'0'
+	jr	hexit4
+hexit3	add	a,'A'-10
+hexit4	ld	b,a
+	pop	af
+	ret	
+;
+;
+n2hxbf	ld	hl,(hxbffas)	;hexbuff[hexbuffpointer]=(B)
+	ld	(hl),c
+	inc	hl		;hexbuffpointer=hexbuffpointer+1
+
+	ld	a,(hxbfcnt)
+	inc	a
+	ld	(hxbfcnt),a
+
+	cp	a,56		;if (56 hexdigits)
+	call	z,wrhxbff	;  write hex buffer
+	ld	(hl),b
+	inc	hl		;hexbuffpointer=hexbuffpointer+1
+
+	ld	a,(hxbfcnt)
+	inc	a
+	ld	(hxbfcnt),a
+
+	ld	(hxbffas),hl
+	cp	a,56		;if (no._of_hex_digits == 56)
+	call	z,wrhxbff
+	ret
+;
+;
+wrhex	push	af		;put Intel Hex code into buffer
+	push	hl
+	push	de
+	push	bc
+	ld	b,a
+	ld	a,(chksum)
+	add	a,b
+	ld	(chksum),a
+	ld	a,b
+	call	hexit
+	call	n2hxbf
+
+	ld	hl,(pchex)
+	inc	hl
+	ld	(pchex),hl
+
+	pop	bc
+	pop	de
+	pop	hl
+	pop	af
+	ret
+;
+;
+wrlist	push	hl		;put byte in A into output buffer
+	push	de
+	push	af
+	ld	a,(lstfas)	;if output buffer full
+	cp	a,128
+	jp	nz,wrlst2
+	ld	de,lstbff	;  set transfer address
+	ld	(taddr),de
+	call	dmaset
+	ld	de,lstfcb
+	ld	(fcb),de
+	call	wrrcrd		;  write record
+	jp	z,wrlst1  	;  if write error
+	call	dspnxt
+ 	db	cr,lf,'List-file write error (disc may be full)',0
+	call	press
+	jp	abort
+wrlst1	xor	a,a		;  objfas=0
+wrlst2	ld	hl,lstbff	;listfas=listfas+1
+	ld	d,0
+	ld	e,a
+	add	hl,de
+	inc	a
+	ld	(lstfas),a
+	pop	af
+	ld	(hl),a		;put byte into buffer
+	pop	de
+	pop	hl
+	ret
+;
+;
+cnv2hex	push	bc		;convert value in A to 2 hex digits
+	ld	b,a		;and place in buffer pointed to by DE
+	rrca
+	rrca
+	rrca
+	rrca
+	and	a,0FH
+	call	cnv2h
+	ld	a,b
+	pop	bc
+	and	a,0FH
+cnv2h	cp	a,lf
+	jp	c,cnv2h1
+	add	a,7
+cnv2h1 	add	a,'0'
+	ld	(de),a
+	inc	de
+	ret
+;
+
+;
+;
+getnam	push	hl		;collect name and put it into "nambff"
+	push	de
+	push	bc
+	ld	hl,nambff
+	ld	a,' '		;nambff='               '
+	ld	(hl),a
+	ld	de,nambff+1
+	ld	bc,15
+	ldir
+	ld	hl,nambff
+	ld	b,1		;length
+	call	readch		;get next non-space char
+gtnm1	cp	a,'a'		;allow "a".."z","0".."9","_","@"
+	jp	c,gtnm2
+	cp	a,'z'+1
+	jp	c,gtnm3
+gtnm2	cp	a,'@'
+	jr	z,gtnm3
+gtnm21	cp	a,'_'
+	jr	z,gtnm3
+	cp	a,'@'
+	jr	z,gtnm3
+	cp	a,'0'
+	jr	c,gtnm9		;<"0"
+	cp	a,'9'+1
+	jr	nc,gtnm9	;>"9"
+gtnm3 	ld	(hl),a		;put l/c char into "nambff"
+	inc	hl
+	inc	b
+	push	hl
+	ld	hl,(lnbptr)	;get next char from line buffer
+	ld	a,(hl)
+	call	uctolc
+	inc	hl
+	ld	(lnbptr),hl
+	pop	hl
+	jp	gtnm1
+	;
+gtnm9	ld	a,b
+	ld	(namlth),a	;length, including count
+	call	backup
+ 	pop	bc
+	pop	de
+	pop	hl
+	ret
+;
+;
+numptr	ds	2
+;
+numarg	push	hl		;convert digits to value
+	push	de		;hex, binary and decimal allowed
+	push	bc
+	ld	hl,(lnbptr)	;save pointer to start of number
+	ld	(numptr),hl
+	ld	b,0		;length counter
+numg1	ld	a,(hl)
+	inc	hl
+	call	uctolc
+	cp	a,'0'
+	jr	c,numg2
+	cp	a,'9'+1
+	jr	c,numg11
+	cp	a,'a'
+	jr	c,numg2
+	cp	'f'+1
+	jr	nc,numg2
+numg11	inc	b
+	jp	numg1
+	;
+numg2	cp	a,'h'		;radix?
+	jp	nz,numg21
+	ld	de,16		; radix 16
+	jp	numg31
+	;
+numg21	dec	hl
+	dec	hl
+	ld	a,(hl)
+	call	uctolc
+	cp	a,'b'		;binary?
+	jp	nz,numg22
+	dec	b
+	ld	de,2		;radix 2
+	jr	numg3
+numg22	cp	a,'d'
+	jr	nz,numg23
+	dec	b
+	ld	de,10
+	jr	numg3
+numg23	ld	de,10		;default radix
+	;
+numg3	inc	hl
+numg31	ld	(lnbptr),hl
+	ld	(mult),de
+	ld	de,0		;value=0
+	;
+numg5	ld	hl,(numptr)
+	ld	a,(hl)
+	inc	hl
+	ld	(numptr),hl
+	call	uctolc
+	cp	a,'a'
+	jp	c,numg51
+	add	a,9		;for "a"-"f"
+numg51	and	a,0FH
+	push	bc		;save counter
+	push	af		;get binary value of this digit
+	ld	hl,(mult)
+	call	mltply
+	pop	af
+	ld	e,a
+	ld	d,0
+	add	hl,de		;add in new digit
+	ex	de,hl
+	pop	bc		;restore counter
+	dec	b
+	jp	nz,numg5	;loop if more
+	;
+	ld	(tval),de	;save value
+	pop	bc
+	pop	de
+	pop	hl
+	ret
+;
+;
+strlth	ds	2
+;
+gtstrg	push	hl		;get a string in single quotes
+	push	de		;mustn't use "readch" to avoid case conversion
+	ld	bc,00
+	ld	(strlth),bc
+	ld	hl,(lnbptr)
+	ld	de,(datfas)
+gtst1 	ld	a,(strlth)	;if (string_length>=80)
+	cp	a,80		;  error
+	jr	z,gtst5
+	ld	a,(hl)		;get next character
+	inc	hl
+	cp	a,cr		;if (ch==cr)
+	jr	z,gtst5		;  error
+	cp	a,''''		;if (ch=="'")
+	jr	nz,gtst2
+	ld	a,(hl)		;  get character.  no "uctolc" here
+	inc	hl
+	cp	a,''''		;  if (ch<>"'")
+	jr	nz,gtst6	;    end of string
+gtst2	ld	(de),a		;string[length]=ch
+	inc	de
+	ld	bc,(strlth)	;length=length+1
+	inc	bc
+	ld	(strlth),bc
+	jr	gtst1
+gtst5	call	aerror
+gtst6	ld	bc,(strlth)	;if (string_length=0)
+	ld	a,b
+	or	a,c
+	jr	nz,gtst61
+	inc	bc		;  string_length=1
+	ld	(strlth),bc
+	xor	a,a		;  string[1]=<nul>
+	ld	(de),a
+	inc	de
+gtst61	ld	(datfas),de
+	dec	hl		;put last char back
+	ld	(lnbptr),hl
+	pop	de
+	pop	hl
+	ret
+;
+;
+namarg	call	getnam		;argument is a name
+	call	stsrch
+	jp	nz,namg1	;if undefined
+	ld	a,(hl)		;  keep address
+	ld	(tval),a
+	inc	hl
+	ld	a,(hl)
+	ld	(tval+1),a
+	inc	hl
+	ld	a,(hl)		;  save register flags
+	ld	(regflg),a
+	jr	namg2
+	;
+namg1	ld	hl,0		;process undefined name
+	ld	(tval),hl	;set value to 0000
+	ld	a,(udfflg)
+	or	a,1
+	ld	(udfflg),a	;set undefined flag
+	ld	hl,(lnbptr)
+	ld	(udfptr),hl
+namg2	ret
+;
+;
+;  expression evaluator  (returns expression value in "xprval")
+;
+;  valid operators are: +, -, *, / , \ (mod), & (and), | (or) and ~ (not)
+;  elements are: names, numbers, and '$' for pc
+;
+fcttyp	ds	1
+fctval	ds	2
+;
+factor	push	hl
+	push	de
+	ld	hl,00
+	ld	(fctval),hl
+	ld	a,notype
+	ld	(fcttyp),a
+	call	readch		;readch
+	if	debugs
+	call	dspnxt
+	db	' >factor ch=',0
+	call	dspall
+	endif
+	cp	a,'a'		;if (ch in [a..z,'@'])
+	jr	nc,fctr0
+	cp	a,'@'
+	jr	nz,fctr1
+	jr	fctr01
+fctr0	cp	a,'z'+1
+	jr	nc,fctr1
+fctr01	call	backup
+	call	namarg		;  name
+	ld	a,(regflg)
+	or	a,a
+	jr	nz,fctr02
+	ld	a,twobyt
+	ld	(fcttyp),a
+	ld	hl,(tval)
+	ld	(fctval),hl
+	jp	fctr6
+fctr02	cp	a,izreg
+	ld	hl,00
+	ld	(fctval),hl
+	jr	nz,fctr03
+	ld	a,twobyt
+	ld	(fcttyp),a
+	jp	fctr6
+fctr03	ld	a,regtyp
+	ld	(fcttyp),a
+	jp	fctr6
+fctr1	cp	a,'0'		;elseif (ch in [0..9])
+	jr	c,fctr2
+	cp	'9'+1
+	jr	nc,fctr2
+	call	backup
+	call	numarg		;  number
+	ld	a,h
+	cp	a,0
+	jr	z,fct11
+	cp	a,0FFH
+	jr	nz,fct12
+fct11	ld	a,onebyt
+	jr	fct13
+fct12	ld	a,twobyt
+fct13	ld	(fcttyp),a
+	ld	hl,(tval)
+	ld	(fctval),hl
+	jp	fctr6
+fctr2	cp	a,'['		;elseif (ch=="[")
+	jr	nz,fctr3
+	call	arxprn		;  arxprn
+	ld	hl,(axpval)
+	ld	(fctval),hl
+	call	readch		;  readch
+	cp	a,']'		;  if not(ch==']')
+	call	nz,serror	;    serror
+	jr	fctr6
+fctr3	cp	a,'$'		;elseif (ch=='$')
+	jr	nz,fctr4
+	ld	hl,(pc)
+	ld	(fctval),hl
+	ld	a,twobyt
+	ld	(fcttyp),a
+	jr	fctr6
+fctr4	cp	a,''''		;elseif (ch=="'")
+	jr	nz,fctr5
+	call	gtstrg		;  getstring	
+	ld	a,(strlth)
+	cp	a,1		;  if (length(string)<>1) error
+	call	nz,serror
+	ld	hl,(datfas)	;  datfas=datfas-1
+	dec	hl
+	ld	(datfas),hl
+	ld	a,(hl)		;  factval=datfas
+	ld	(fctval),a
+	ld	a,onebyt	;  facttyp=onebyte
+	ld	(fcttyp),a
+	jr	fctr6
+fctr5	call	backup		;else
+	ld	hl,00		;  put ch back
+	ld	(fctval),hl
+fctr6	if	debugs
+	call	dspnxt
+	db	' <factor: fctval=',0
+	call	dsp4hex
+	endif
+	pop	de
+	pop	hl
+	ret
+;
+;
+op 	ds	1		;current operator for "xprshn"
+trmtyp	ds	1		;type of term
+tval
+trmval	ds	2
+;
+;
+term	push	hl
+	push	de
+	if	debugs
+	call	dspnxt
+	db	' >term ',0
+	endif
+	call	factor
+term1	call	readch		;readch
+	cp	a,'*'		;case ch of
+	jr	nz,term11
+	ld	hl,(fctval)	;  '*' :
+	push	hl		;    push(factval)
+	call	factor		;    factor
+	ld	de,(fctval)	
+	pop	hl		;    pop(fact1val)
+	call	mltply		;    factval=fact1val*factval
+	jr	term14
+term11	cp	a,'/'
+	jr	nz,term12	
+	ld	hl,(fctval)	;  '/' :
+	push	hl
+	call	factor
+	ld	de,(fctval)
+	pop	hl
+	call	div16		;    factval=fact1val/factval
+	jp	term14	
+term12	cp	a,'\'
+	jr	nz,term13	
+	ld	hl,(fctval)
+	push	hl
+	call	factor
+	ld	de,(fctval)
+	pop	hl
+	call	div16		;    factval=fact1val mod factval
+	ex	de,hl
+	jp	term14
+term13	cp	a,'&'		;  '&'
+	jr	nz,term5
+	ld	hl,(fctval)
+	push	hl
+	call	factor
+	ld	de,(fctval)
+	pop	hl
+	ld	a,h		;    factval=fact1val & factval
+	and	a,d
+	ld	h,a
+	ld	a,l
+	and	a,e
+	ld	l,a
+	;
+term14	ld	(fctval),hl
+	jp	term1
+term5	call	backup
+term6	ld	a,(fcttyp)
+	ld	(trmtyp),a
+	ld	hl,(fctval)
+	ld	(trmval),hl
+	if	debugs
+	call	dspnxt
+	db	' <term: trmval=',0
+	call	dsp4hex
+	endif
+	pop	de
+	pop	hl
+	ret
+;
+;
+axptyp	ds	1
+axpval	ds	2
+aop0	ds	1
+;
+arxprn	push	hl
+	push	de
+	call	readch
+	if	debugs
+	call	dspnxt
+	db	' >arxprn ch=',0
+	call	dspall
+	endif
+	cp	a,'+'		;aop0=monadic operator
+	jr	z,arxp0
+	cp	a,'-'
+	jr	z,arxp0
+	cp	a,'~'
+	jr	z,arxp0
+	call	backup
+	ld	a,'+'
+arxp0	ld	(aop0),a
+	call	term
+	ld	a,(aop0)	;case aop0 of
+	cp	a,'+'		;  '=' :do nothing
+	jr	z,arxp1
+	cp	a,'-'
+	jr	nz,arxp01
+	ld	hl,00		;  '-' :
+	ld	de,(trmval)
+	or	a,a
+	sbc	hl,de
+	ld	(trmval),hl
+	jp	arxp1
+arxp01	cp	a,'~'
+	jr	nz,arxp02
+				;  '~' :
+
+
+arxp02				;  else :do nothing
+	;
+arxp1	call	readch		;while (ch in ["+","-","~","|"])
+	cp	a,'+'		;  case ch of
+	jr	nz,arxp11
+	ld	hl,(trmval)	;    '+' :
+	push	hl		;      push(termval)
+	ld	a,(regflg)
+	push	af
+	call	term		;      term
+	pop	af
+	ld	(regflg),a
+	ld	de,(trmval)	;      pop(term1val)
+	pop	hl		;      termval=term1val+termval
+	add	hl,de	
+	jr	arxp19
+arxp11	cp	a,'-'
+	jr	nz,arxp12
+	ld	hl,(trmval)	;    '-' :
+	push	hl
+	ld	a,(regflg)
+	push	af
+	call	term
+	pop	af
+	ld	(regflg),a
+	ld	de,(trmval)
+	pop	hl
+	or	a,a
+	sbc	hl,de	
+	jr	arxp19
+arxp12	cp	a,'~'
+	jr	nz,arxp13
+	ld	hl,(trmval)	;    '~' :
+	push	hl
+	call	term
+	ld	de,(trmval)
+	pop	hl
+	ld	a,h
+	xor	a,d
+	ld	h,a
+	ld	a,l
+	xor	a,e
+	ld	l,a
+	jr	arxp19
+arxp13	cp	a,'|'
+	jr	nz,arxp2
+	ld	hl,(trmval)	;    '|' :
+	push	hl
+	call	term
+	ld	de,(trmval)
+	pop	hl
+	ld	a,h
+	or	a,d
+	ld	h,a
+	ld	a,l
+	or	a,e
+	ld	l,a
+	;
+arxp19	ld	(trmval),hl
+	jp	arxp1
+arxp2	call	backup
+
+arxp3	ld	a,(trmtyp)
+	ld	(axptyp),a
+	ld	hl,(trmval)	;axpval=termval
+	ld	(axpval),hl
+	if	debugs
+	call	dspnxt
+	db	' <arxprn: axpval=',0
+	call	dsp4hex
+	endif
+	pop	de
+	pop	hl
+	ret
+;
+;
+xprtyp	ds	1
+xprval	ds	2
+;
+xprshn	push	hl
+	push	de
+;
+	if	debugs
+	call	dspnxt
+	db	cr,lf,' >xprshn ',0
+	endif
+;
+	xor	a,a
+	ld	(op),a		;op=nop
+	ld	(regflg),a	;regflg=0
+	ld	a,notype
+	ld	(xprtyp),a
+	ld	hl,0
+	ld	(xprval),hl	;value=0
+ 	call	readch		;readch
+	cp	a,'a'
+	jr	nc,xprn0	;if (ch in letters)
+	cp	a,''
+	jr	nz,xprn1
+	jr	xprn01
+xprn0	cp	a,'z'+1
+	jr	nc,xprn1
+xprn01	call	backup
+	call	arxprn
+	ld	a,(axptyp)
+	ld	(xprtyp),a
+	ld	hl,(axpval)
+	ld	(xprval),hl
+	jp	xprn9
+xprn1	cp	a,''''		;elseif (ch=="'")
+	jr	nz,xprn2
+	call	gtstrg		;  getstring
+	ld	a,(strlth)	;  if (string_length>1)
+	cp	a,2
+	jr	c,xprn11
+	ld	e,(hl)		;    exprnvalue=
+	inc	hl
+	ld	d,(hl)
+	ld	(xprval),de
+	ld	a,strtyp	;    exprntype=string
+	ld	(xprtyp),a
+	jp	xprn9
+xprn11	ld	hl,(datfas)	;  else		#have string[1]
+	dec	hl
+	ld	(datfas),hl	;    datfas=datfas-1
+	ld	a,(hl)
+	push	af		;    push(ch)
+	call	arxprn		;    arithexprn
+	pop	af		;    pop(ch)
+	ld	hl,(axpval)	;    exprnval=arexpval+ch
+	ld	d,0
+	ld	e,a
+	add	hl,de
+	ld	(xprval),hl
+	ld	a,onebyt	;    exprtype=onebyte
+	ld	(xprtyp),a
+	jp	xprn9
+	;
+xprn2	call	backup		;else
+	call	arxprn
+	ld	a,(axptyp)
+	cp	a,notype
+	jr	nz,xprn21
+	call	serror
+	jr	xprn9
+xprn21	ld	(xprtyp),a
+	ld	hl,(axpval)
+	ld	(xprval),hl
+	;
+xprn9	if	debugs
+	call	dspnxt
+	db	' <xprshn: xprval=',0
+	call	dsp4hex
+	call	dspnxt
+	db	' xprtyp=',0
+	ld	a,(xprtyp)
+	call	dsp2hex
+	endif
+	pop	de
+	pop	hl
+	ret
+;
+;
+clspar	push	af		;check for closing ')'
+	call	readch
+	cp	a,')'
+	call	nz,serror
+	pop	af
+	ret
+;
+;
+setup				;display title
+	ld	h,6
+	ld	l,20
+	call	dspnxt
+ 	db	'Zimsoft Z-80 assembler 2.0',0
+	ld	h,9
+	ld	l,23
+	call	dspnxt
+	db	'(C) P.F.Ridler  1985'
+;	db	esc,'N',cr,lf,0		;for printer
+	db	cr,lf,0
+	ld	h,12
+	ld	l,0
+	;
+	ld	hl,(4201H)	;get base of CCP
+	ld	de,1603H	;for standard CP/M !!!!!!!
+	or	a,a
+	sbc	hl,de
+	ld	(ccp),hl
+	ld	hl,dffcb	;move drive and name from default fcb to
+	ld	de,srcfcb	;  source fcb
+	ld	bc,9
+	ldir
+	ld	hl,z80ext	;source type is "Z80"
+	ld	bc,3
+	ldir
+	ld	hl,srcfcb
+	ld	bc,12
+	add	hl,bc
+	ld	(hl),0
+	inc	de
+	ld	bc,20
+	ldir
+	ld	hl,dffcb	;move drive and name from default fcb to
+	ld	de,objfcb	;  object fcb
+	ld	bc,9
+	ldir
+	ld	a,(426DH)		;if ({6CH}=='H')
+	cp	a,'H'
+	ld	a,false
+	jr	nz,setup00
+	ld	a,true		;  hexflag=true
+	ld	hl,wrhex	;  set output write routine to "wrhex"
+	ld	(ndst55+1),hl	;    instead of "wrbyte"
+setup00	ld	(hexflg),a
+	jr	nz,setup01
+	ld	hl,00		;  pcstart=0000H
+	ld	(pcstart),hl
+	ld	hl,hexext	;  extn='HEX'
+	jr	setup02		;else
+setup01	ld	hl,comext	;  extn='COM'
+setup02	ld	bc,3
+	ldir
+	ld	hl,objfcb	;set up list file
+	ld	bc,12		;drive and name same as source
+	add	hl,bc
+	ld	(hl),0
+	inc	de
+	ld	bc,20
+	ldir
+	ld	hl,dffcb	;move drive and name from default fcb to
+	ld	de,lstfcb	;  list fcb
+	ld	bc,9
+	ldir
+	ld	hl,lstext	;extension="LST"
+	ld	bc,3
+	ldir
+	ld	hl,lstfcb	;zero rest of list fcb
+	ld	bc,12
+	add	hl,bc
+	ld	(hl),0
+	inc	de
+	ld	bc,20
+	ldir
+	;
+	ld	de,srcfcb	;try to open source file
+	ld	(fcb),de
+	call	opnfil
+	jr	nz,setup1	;if source file not found
+ 	call	dspnxt
+ 	db	cr,lf,'Source (.Z80) file not found.',0
+	call	press
+	jp	abort
+setup1	ld	de,objfcb	;delete any output file of same name
+	ld	(fcb),de
+	call	delfil
+	ld	de,objfcb	;create a new output file
+	ld	(fcb),de
+	call	crtfil
+	jr	nz,setp11	;if unable to create
+	call	dspnxt
+ 	db	cr,lf,'Unable to create/open object (.COM) file.',0
+	call	press
+	jp	abort
+setp11	ld	de,lstfcb	;delete any list file of same name
+	ld	(fcb),de
+	call	delfil
+	ld	de,lstfcb	;create a new list file
+	ld	(fcb),de
+	call	crtfil
+	jr	nz,setup2	;if unable to create
+	call	dspnxt
+ 	db	cr,lf,'Unable to create/open list (.LST) file.',0
+	call	press
+	jp	abort
+setup2	xor	a,a		
+	ld	(objfas),a	;reset output buffer pointer
+	ld	(lstfas),a	;	list	"	"
+	ld	(symtab),a	;symbol table terminator
+	ld	hl,symtab	;point to first available space in "symtab"
+	ld	(stfas),hl
+	ld	hl,(4206H)	;set top of symtab
+	ld	de,07
+	or	a,a
+	sbc	hl,de
+	ld	(stend),hl	;set top of symtab
+	ld	bc,512		;zero 512-byte hash table
+	ld	hl,hshtbl
+setup3	ld	(hl),0
+	inc	hl
+	dec	bc
+	ld	a,b
+	or	a,c
+	jr	nz,setup3
+	ld	hl,regtbl	;hash registers into symbol table
+	ld	b,16
+setup4	push	bc
+	ld	de,stbuff
+	ld	a,(hl)		;length
+	add	a,ovrhds
+	ld	c,a
+	ld	b,0
+	ldir			;move entry to "stbuff"
+	push	hl
+	call	ptn2st		;put into "symtab"
+	pop	hl
+	pop	bc
+	djnz	setup4
+	ld	hl,00		;no. of symtab entries excluding registers
+	ld	(nstnt),hl
+	call	dspnxt
+	db	'Pass 1  ',cr,lf,0
+	ld	a,8
+	ld	(ndots),a
+	ld	hl,srcfcb
+	call	dspfnm
+	ret
+;
+;
+getlin	ld	hl,(nlines)	;get next input line
+	inc	hl		;fill buffer until <lf> or <eof> found
+	ld	(nlines),hl
+	call	dspdot
+ 	ld	hl,linbff	;reset line buffer pointer
+	ld	(lnbptr),hl
+gtln1 	call	getbyt		;get a byte from disc buffer
+	cp	a,eof
+	ret	z		;if <eof> return
+gtln2	ld	(hl),a
+	inc	hl
+	cp	a,lf
+	jr	nz,gtln1	;else loop until <lf> found
+	ret
+;
+;
+backup 	push	hl		;put character back into line buffer
+	ld	hl,(lnbptr)	;after look ahead
+	dec	hl
+	ld	(lnbptr),hl
+	pop	hl
+	ret
+;
+;
+dsfill	push	af		;fill "ds" space with <nul>s
+	push	hl
+	ld	a,(passno)	;if (pass2)
+	or	a,a
+	jr	z,dsfl2
+	ld	a,(dsflag)	;  if (dsflag)
+	or	a,a
+	jr	z,dsfl11
+	ld	hl,(dslgth)	;    for i=1 upto dslgth
+dsfl1	ld	a,h
+	or	a,l
+	jr	z,dsfl11
+	xor	a,a		;      writebyte(0)
+	call	wrbyte
+	dec	hl
+	jr	dsfl1
+dsfl11	xor	a,a		;  dsflag=false
+	ld	(dsflag),a
+	ld	hl,00		;  dslgth=0
+	ld	(dslgth),hl
+dsfl2	pop	hl
+	pop	af
+	ret
+;
+;
+;	set error flags
+;
+aerror	push	af
+	ld	a,'A'		;argument error
+	jr	error
+;
+berror	push	af
+	ld	a,'B'
+	jr	error
+;
+ferror	push	af
+	ld	a,'F'		;"include" file not found 
+	jr	error
+;
+lerror	push	af
+	ld	a,'L'		;lable too long
+	jr	error
+;
+merror	push	af
+	ld	a,'M'		;multiple definition
+	jr	error
+;
+oerror	push	af
+	ld	a,'O'		;op-code
+	jr	error
+;
+rerror	push	af
+	ld	a,'R'		;range error
+	jr	error
+;
+serror	push	af
+	ld	a,'S'		;syntax error
+	jr	error
+;
+uerror	push	af
+	ld	a,'U'		;undefined variable
+	jr	error
+;
+verror	push	af
+	ld	a,'V'		;value error
+	jr	error
+;
+xerror	push	af
+	ld	a,'X'		;extra character on line
+	jr	error
+;
+error	ld	(errflg),a	;set error flag
+	push	hl
+	ld	hl,(lnbptr)
+	ld	(errptr),hl
+	pop	hl
+	pop	af
+	ret
+;
+;
+stbuff	ds	15		;buffer for symbol table entry
+symadr	ds	2		;^address of address in last "ptn2st"
+;
+;
+	ds	128		;just the usual stack
+stack	equ	$
+;
+;
+;
+zasmb	ld	sp,stack
+	call	setup		;display heading and initialise
+	xor	a,a
+	ld	(passno),a	;indicate pass 1
+	;
+pass2	xor	a,a
+	ld	(dsflag),a	;ds_flag=false
+	ld	(lstcls),a	;list_close=false
+	ld	(lstflg),a	;list_flag=off
+	ld	a,'.'
+	ld	(chdsp),a
+	ld	hl,-1
+	ld	(nlines),hl	;nlines=-1
+	inc	hl
+	ld	(level),hl	;include_level=0
+	ld	(totlns),hl	;total_lines=0
+	ld	(nerrs),hl	;nerrors=0
+	ld	(nstsr),hl
+	ld	(dslgth),hl	;ds_length=0
+	ld	hl,(pcstart)
+	ld	(pc),hl		;pc=pcstart  (100H for .COM, 0000H for .HEX)
+	ld	(pchex),hl
+	ld	hl,srcbff	;set up to read from source file
+	ld	(ipbuff),hl
+	ld	hl,srcend
+	ld	(ipbndx),hl
+	ld	(ipbend),hl
+	ld	hl,srcfcb
+	ld	(pipfcb),hl
+;
+;
+;	main loop - read a source line
+;			process label and opcode
+;			print line (unless option=n)
+;			output hex (if necessary)
+;			back to main loop for next line
+;
+;
+next	ld	sp,stack
+	ld	hl,00
+	ld	(xprval),hl
+	ld	(length),hl
+	ld	hl,datbff
+	ld	(datfas),hl
+	ld	a,false
+	ld	(udfflg),a
+	ld	(endflg),a
+	ld	(switch),a	;i/p file switched=false
+	ld	(havlbl),a
+	ld	a,' '
+	ld	(errflg),a
+	ld	a,codtyp
+	ld	(lintyp),a
+	call	getlin		;get next line
+	cp	a,eof
+	jr	nz,next0
+	ld	a,(level)	;if (level==0)
+	or	a,a
+	jp	z,endop1	;  jump to endop1
+	ld	a,true		;else
+	ld	(switch),a	;  sitch=true
+next0	ld	a,(linbff)	;get char in col 0
+	cp	a,tab
+	jp	z,next2		;tab, so no label
+	cp	a,cr
+	jp	z,ndstmt	;null line
+	cp	a,' '
+	jp	z,next2		;no label
+	cp	a,';'
+	jr	nz,next1
+	ld	a,comtyp
+	ld	(lintyp),a
+	jp	ndstmt
+next1	ld	a,true
+	ld	(havlbl),a
+	call	getnam		;get label
+	call	readch
+	cp	a,':'		;ignore ":"
+	call	nz,backup	;  calculate length of label and build entry
+	ld	b,1		;length
+	ld	hl,nambff
+	ld	de,stbuff+1
+next11	ld	a,(hl)		;collect label
+	cp	a,' '
+	jr	z,next12
+	ld	(de),a
+	inc	hl
+	inc	de
+	inc	b
+	jr	next11
+next12	ld	a,b		;check name length
+	cp	a,maxnch+2	;allow for length byte
+	jr	c,next13
+	call	lerror
+	jp	ndstmt		;else label error
+next13	ld	(stbuff),a	;  length
+	ex	de,hl
+	xor	a,a		;  link=00
+	inc	hl
+	ld	(hl),a
+	inc	hl
+	ld	(hl),a
+	ld	a,(pc)
+	ld	(hl),a
+	inc	hl		;  address=pc
+	ld	a,(pc+1)
+	ld	(hl),a
+	inc	hl
+	ld	(hl),0		;  type=0
+	ld	a,(passno)
+	or	a,a		;if pass=0
+	jr	nz,next15
+	call	stsrch		;  stsrch
+	jr	nz,next14	;  if found
+	ld	hl,(flgadd)	;    flag as multiply defined
+	ld	a,(hl)
+	or	a,80H
+	ld	(hl),a
+	jr	next2		;else
+next14	call	ptn2st		;  enter symbol into table
+	ld	(symadr),hl	;  save address for "equ"
+	jr	next2
+next15	call	stsrch		;elseif (pass=2)    #check phase error!!!
+	jr	nz,next16	;  stsrch           #must be found!!!
+	ld	hl,(flgadd)	;  if found
+	ld	a,(hl)
+	and	a,80H		;    if bit 7 set
+	jr	z,next2
+	call	merror		;      set "multiply defined" flag
+	jr	next2		;  else
+next16	ld	a,1		;    set "undefined" flag
+	ld	(udfflg),a
+	ld	hl,(lnbptr)
+	ld	(udfptr),hl
+next2	call	getnam		;process opcode
+	ld	a,(nambff)
+	cp	a,' '
+	jp	z,ndstmt	;if no opcode must be comment
+	call	opsrch		;search op-code table
+	jr	z,next21
+	call	oerror		;op-code error
+	jp	ndstmt
+next21	ld	a,(hl)
+	ld	(opcode),a
+	inc	hl
+	ld	a,(hl)
+	ld	(opcode+1),a	;save opcode
+	inc	hl
+	ld	a,(hl)		;get type byte
+	cp	a,pseudop
+	call	c,dsfill
+	dec	a
+	add	a,a		;-1 and double for table index
+	ld	e,a
+	ld	d,0
+	ld	hl,typtbl
+	add	hl,de
+	ld	e,(hl)
+	inc	hl
+	ld	d,(hl)
+	ex	de,hl
+	jp	(hl)		;dispatch to proper instruction type
+;
+;
+; **************  z80asmb.z82   ;Moved include file here *** Ramon
+;
+;------------------------------------------------------------------------------
+;
+;		operator dispatch table
+;
+;		  need check at load3
+;
+;------------------------------------------------------------------------------
+;
+typtbl	dw	oponly		;class 1 - opcode only
+	dw	rotate		;class 2 - rotates
+	dw	jumps		;class 3 - jumps (non relative) calls
+	dw	jprel		;class 4 - relative jumps (jr and djnz)
+	dw	restrt		;class 5 - rst
+	dw	arops		;class 6 - arithmetic instructions
+	dw	ioops		;class 7 - i/o
+	dw	loads		;class 8 - ld instructions
+	dw	pshpop		;class 9 - push,pop
+	dw	exchng		;class 10- exchange (ex)
+	dw	return		;class 11- returns
+	dw	bitops		;class 12- bit,set,res
+	dw	incdec		;class 13- inc,dec
+	dw	pseudo		;class 14- pseudo operators
+;
+;
+;	class 1 - opcode only
+;
+oponly 	ld	a,(opcode+1)
+	or	a,a
+	ld	a,(opcode)
+	jp	z,end1
+	ld	l,a
+	ld	a,(opcode+1)
+	ld	h,a
+	jp	end2
+;
+;
+;	class 2 - rotates
+;
+rotate	call	readch		;readch
+	cp	a,'('		;if (ch<>'(')
+	jr	z,rtt1
+	call	backup		;  not "(" so putback
+	call	xprshn		;  xprshnession
+	ld	a,(regflg)	;  if (not <r>)
+	and	a,10H
+	call	z,aerror	;    error('A')
+	ld	a,(regflg)
+	and	a,07H		;    register number
+	push	af
+	ld	a,0CBH		;    instruction[0]=CBH
+	ld	l,a
+	ld	a,(opcode)
+	ld	b,a		;    instruction[1]=opcode or <r>
+	pop	af
+	or	a,b
+	ld	h,a
+	jp	end2		;else
+rtt1	call	xprshn		;  expression
+	ld	a,(regflg)	;  if ("hl")
+	cp	a,hlreg
+	jr	nz,rtt2
+	ld	a,0CBH		;    instruction[0]=CBH    
+	ld	l,a
+	ld	a,(opcode)	;    instruction[1]=opcode+6
+	add	a,06H
+	ld	h,a
+	call	clspar
+	jp	end2
+rtt2	cp	a,ixreg		;  elseif ("ix")
+	jr	nz,rtt3
+	ld	a,0DDH
+	jr	rtt4
+rtt3	cp	a,iyreg		;  elseif ("iy")
+	call	nz,serror
+	ld	a,0FDH
+rtt4	ld	l,a
+	ld	h,0CBH
+	ld	a,(xprval)
+	ld	e,a
+	ld	a,(opcode)
+	add	a,6
+	ld	d,a
+	call	clspar
+	jp	end4
+;
+;
+;	class 3 - jumps - calls		OK
+;
+jumps	call	readch
+	cp	a,'('
+	jp	nz,jump2
+	ld	a,(opcode)
+	cp	a,jpopc
+	call	nz,aerror
+	call	xprshn		;jp (??
+	call	clspar
+	ld	a,(regflg)	;jp (??)
+	cp	a,hlreg
+	jr	nz,jump1
+	ld	a,(regflg)
+	cp	a,hlreg
+	jr	nz,jump1
+	ld	a,0E9H		;jp (hl)
+	jp	end1
+jump1	cp	a,ixreg
+	jr	nz,jump11
+	ld	l,0DDH		;jp (ix)
+	jr	jump12
+jump11	cp	a,iyreg
+	call	nz,aerror
+	ld	l,0FDH		;jp (ix)
+jump12	ld	h,0E9H
+	jp	end2
+	;
+jump2	call	backup		;jp ??
+	call	xprshn
+	call	ctsrch		;search condition table
+	cp	a,8
+	jr	nc,jump21
+	push	af		;jp cc	;save <cc>
+	call	readch
+	cp	a,','
+	call	nz,serror
+	xor	a,a		;jp cc,
+	ld	(udfflg),a	;reset "undefined" set by "xprshn"
+	pop	af		;restore <cc>
+	rlca
+	rlca
+	rlca
+	ld	b,a
+	ld	a,(opcode+1)
+	or	a,b
+	ld	(opcode),a
+	call	xprshn		;jp cc,nn
+jump21	ld	a,(opcode)	;jp nn
+	ld	hl,(xprval)
+	jp	endahl
+;
+;
+;	class 4 - relative jumps (jr and djnz)	OK
+;
+;
+jprel	call	xprshn		;xprshnession
+	call	ctsrch		;search condition table
+	cp	a,8		;if (conditional)
+	jr	nc,jprl1
+	cp	a,4		;  only nz,z,nc,c allowed
+	call	nc,aerror
+	push	af		;  save condition number
+	xor	a,a		;  reset "undefined"
+	ld	(udfflg),a
+	pop	af		;  condition number
+	rlca			;  form opcode
+	rlca
+	rlca			;  001cc000
+	and	a,18H
+	add	a,20H
+	push	af		;  save opcode
+	call	readch		;  readch
+	cp	a,','		;  if (ch<>',')
+	call	nz,serror	;    error('S')
+	call	xprshn		;  expression
+	pop	af		;  retreive opcode
+	jr	jprl2
+jprl1	ld	a,(opcode)	;instruction=opcode
+jprl2	ld	e,a
+	ld	hl,(xprval)	;check range for "jr"
+	ld	bc,(pc)
+	or	a,a
+	sbc	hl,bc
+	dec	hl
+	dec	hl
+	ld	d,l
+	ld	bc,80H
+	add	hl,bc
+	ld	a,h
+	or	a,a
+	call	nz,rerror	;range error
+	ex	de,hl
+	jp	end2
+;
+;
+;	class 5 - restarts
+;
+restrt	call	xprshn		;must be 1 byte value = 0|8|10H|...|38H
+	ld	a,(xprval)
+	and	a,0C7H
+	call	nz,aerror
+	ld	a,(xprval)
+	and	a,38H
+	or	a,0C7H
+	jp	end1
+;
+;
+;	class 6 - arithmetic opcodes
+;
+;	add,sub,adc,sbc,and,or,xor,cp		arop  [a,]r   arop hl,rp
+;
+arops	call	readch
+	cp	a,'a'
+	jr	nz,arop1
+	call	readch		;arop a
+	cp	a,','
+	jr	z,arop2
+	call	backup
+arop1	call	backup
+arop2	call	readch
+	cp	a,'('
+	jr	z,arop4
+	call	backup
+	call	xprshn
+	ld	a,(xprtyp)
+	cp	a,notype
+	jr	nz,arop21
+	ld	a,areg
+	ld	(regflg),a
+arop21	ld	a,(regflg)
+	and	a,rpmask
+	jr	nz,arop5
+	ld	a,(regflg)
+	and	a,rmask
+	jr	z,arop3
+	ld	a,(regflg)	;arop [a,] r
+	and	a,07H
+	ld	b,a
+	ld	a,(opcode)
+	or	a,b
+	jp	end1
+arop3	ld	a,(xprtyp)
+	cp	a,notype
+	call	z,serror
+	ld	a,(opcode)	;arop [a,] n
+	add	a,46H
+	ld	l,a
+	ld	a,(xprval)
+	ld	h,a
+	jp	end2
+arop4	call	xprshn		;arop [a,] (?
+	ld	a,(regflg)
+	cp	a,hlreg
+	jr	nz,arop41
+	call	clspar
+	ld	a,(opcode+1)	;arop a,(hl)
+	jp	end1
+arop41	cp	a,ixreg
+	jr	nz,arop42
+	ld	l,0DDH		;arop a,(ix+d)
+	jr	arop43
+arop42	cp	a,iyreg
+	call	nz,aerror
+	ld	l,0FDH		;arop a,(iy+d)
+arop43	call	clspar
+	ld	a,(opcode+1)
+	ld	h,a
+	ld	a,(xprval)
+	jp	endhla
+arop5	ld	a,(regflg)	;arop rp
+	ld	(reg1),a
+	call	readch
+	cp	a,','
+	call	nz,serror	;arop rp,
+	call	xprshn
+	ld	a,(regflg)
+	ld	(reg2),a
+	and	a,rpmask
+	call	z,aerror
+	ld	a,(reg2)	;arop rp,rp
+	and	a,0FH
+	rlca
+	rlca
+	rlca
+	rlca
+	ld	b,a
+	ld	a,(reg1)
+	cp	a,hlreg
+	jr	nz,arop7
+	ld	a,(opcode+1)	;arop hl,
+	cp	a,addhl
+	jr	nz,arop6
+	ld	a,(reg2)	;arop hl,ss
+	cp	a,ixreg
+	call	nc,aerror
+	ld	a,09H
+	or	a,b
+	jp	end1
+arop6	cp	a,adchl
+	jr	nz,arop61
+	ld	a,4AH		;adc hl,ss
+	jr	arop62
+arop61	cp	a,sbchl
+	call	nz,aerror
+	ld	a,42H		;sbc hl,ss
+arop62	ld	l,0EDH
+	or	a,b
+	ld	h,a
+	jp	end2
+arop7	ld	hl,reg2		;modify B if pp=ix or qq=iy
+	cp	a,(hl)
+	jr	nz,arop71
+	ld	a,b
+	and	a,0FH
+	or	a,20H
+	ld	b,a
+	ld	a,(reg1)
+arop71	cp	a,ixreg
+	jr	nz,arop72
+	ld	a,(reg2)	;add ix,pp
+	cp	a,hlreg
+	call	z,aerror
+	cp	a,iyreg
+	call	nc,aerror
+	ld	l,0DDH
+	jr	arop73
+arop72	cp	a,iyreg
+	call	nz,aerror
+	ld	a,(reg2)	;add iy,qq
+	cp	a,hlreg
+	call	z,aerror
+	cp	a,ixreg
+	call	z,aerror
+	cp	a,afreg
+	call	z,aerror
+	ld	l,0FDH
+arop73	ld	a,09H
+	or	a,b
+	ld	h,a
+	jp	end2
+
+
+;
+;	class 7 - i/o instructions  OK
+;
+;
+ioops	ld	a,(opcode)
+	cp	a,0DBH
+	jp	nz,iops2
+	call	xprshn		;in ??
+	ld	a,(regflg)
+	ld	b,a
+	and	a,rmask
+	call	z,serror
+	ld	a,b		;in r
+	cp	a,areg
+	jp	nz,iops1
+	call	readch		;in a
+	cp	a,','
+	call	nz,serror
+	call	readch		;in a,
+	cp	a,'('
+	call	nz,serror
+	call	xprshn		;in a,(		(need length check)
+	ld	a,(xprval)
+	ld	h,a
+	ld	l,0DBH
+	call	clspar
+	jp	end2
+iops1	rlca			;in r
+	rlca
+	rlca
+	and	a,38H
+	add	a,40H
+	ld	h,a
+	ld	l,0EDH
+	call	readch
+	cp	a,','
+	call	nz,serror
+	call	readch		;in r,
+	cp	a,'('
+	call	nz,serror
+	call	xprshn		;in r,(
+	ld	a,(regflg)
+	cp	a,creg
+	call	nz,serror
+	call	clspar		;in r,(c
+	jp	end2		;in r,(c)
+iops2	call	readch		;out ??
+	cp	a,'('
+	call	nz,serror
+	call	xprshn		;out (
+	ld	a,(regflg)
+	cp	a,creg
+	jp	nz,iops3
+	call	clspar		;out (c
+	call	readch		;out (c)
+	cp	a,','
+	call	nz,serror
+	call	xprshn		;out (c),??
+	ld	a,(regflg)
+	ld	b,a
+	and	a,rmask
+	call	z,aerror
+	ld	a,b
+	and	a,07H		;out (c),r
+	rlca
+	rlca
+	rlca
+	and	a,38H	;???
+	add	a,41H
+	ld	h,a
+	ld	l,0EDH
+	jp	end2		;out (c),r
+iops3	ld	a,(xprval)
+	push	af
+	call	clspar
+	call	readch		;out (n)
+	cp	a,','
+	call	nz,serror
+	call	xprshn		;out (n),
+	ld	a,(regflg)
+	cp	a,areg
+	call	nz,aerror
+	pop	af
+	ld	h,a
+	ld	l,0D3H		;out (n),a
+	jp	end2
+;
+;
+;	class 8 - ld instructions
+;
+;
+;	class 8 - ld instructions
+;
+loads	call	readch
+	cp	a,'('
+	jp	z,load6
+	call	backup
+	call	xprshn
+	ld	hl,(xprval)
+	ld	(savval),hl
+	ld	a,(regflg)
+	ld	(reg1),a
+	ld	a,(regflg)
+	and	a,rpmask
+	jp	nz,load3
+	call	readch
+	cp	a,','
+	call	nz,serror
+	call	readch		;ld r,
+	cp	a,'('
+	jp	z,load1
+	call	backup
+	call	xprshn
+	ld	a,(regflg)
+	or	a,a
+	jr	nz,load01
+	ld	a,(reg1)	;ld r,n
+	and	a,0FH
+	sla	a
+	sla	a
+	sla	a
+	or	a,06H
+	ld	l,a
+	ld	a,(xprval)
+	ld	h,a
+	jp	end2
+load01	and	a,rmask
+	call	z,aerror
+	ld	a,(regflg)	;ld r,r
+	ld	(reg2),a
+	ld	a,(reg1)
+	cp	a,areg
+	jr	nz,load03
+	ld	a,(reg2)	;ld a,
+	cp	a,ireg
+	jr	nz,load02
+	ld	hl,57EDH	;ld a,i
+	jp	end2
+load02	cp	a,rreg
+	jr	nz,load06
+	ld	hl,5FEDH	;ld a,R
+	jp	end2
+load03	cp	a,ireg
+	jr	nz,load04
+	ld	hl,47EDH	;ld i,a
+	jr	load05
+load04	cp	a,rreg
+	jr	nz,load06
+	ld	hl,4FEDH	;ld R,a
+load05	ld	a,(reg2)
+	cp	a,areg
+	call	nz,aerror
+	jp	end2
+load06	ld	a,(reg1)	;ld r,r
+	and	a,0FH
+	sla	a
+	sla	a
+	sla	a
+	or	a,40H
+	ld	b,a
+	ld	a,(reg2)
+	and	a,0FH
+	or	a,b
+	jp	end1
+load1	call	xprshn		;ld r,(
+	call	clspar
+	ld	a,(regflg)
+	ld	(reg2),a
+	ld	a,(reg1)	;ld r,(??)
+	cp	a,areg
+	jr	nz,load2
+	ld	a,(regflg)	;ld a,(??)
+	and	a,rpmask
+	jp	nz,load11
+	ld	a,3AH		;ld a,(nn)
+	ld	hl,(xprval)
+	jp	endahl
+load11	ld	a,(reg2)
+	cp	a,bcreg
+	jr	nz,load12
+	ld	a,0AH		;ld a,(bc)
+	jp	end1
+load12	cp	a,dereg
+	jr	nz,load2
+	ld	a,1AH		;ld a,(de)
+	jp	end1
+load2	ld	a,(reg1)	;ld r,(rp)
+	and	a,0FH
+	sla	a
+	sla	a
+	sla	a
+	or	a,46H
+	ld	h,a
+	ld	a,(reg2)
+	cp	a,hlreg
+	jr	nz,load21
+	ld	a,h		;ld r,(hl)
+	jp	end1
+load21	cp	a,ixreg
+	jr	nz,load22
+	ld	l,0DDH		;ld r,(ix+d)
+	jr	load23
+load22	cp	a,iyreg
+	call	nz,aerror
+	ld	l,0FDH		;ld r,(iy+d)
+load23	ld	a,(xprval)
+	jp	endhla
+load3	call	readch		;ld rp
+	cp	a,','
+	call	nz,serror
+	call	readch
+	cp	a,'('
+	jr	z,load5
+	call	backup		;ld rp,
+	call	xprshn
+	ld	a,(regflg)
+	ld	(reg2),a
+	or	a,a
+	jr	nz,load4
+	ld	de,(xprval)
+	ld	a,(reg1)	;ld rp,nn
+	cp	a,ixreg
+	jr	nz,load31
+	ld	hl,21DDH	;ld ix,nn
+	jp	end4
+load31	cp	a,iyreg
+	jr	nz,load33
+	ld	hl,21FDH	;ld iy,nn
+	jp	end4
+load33	ld	a,(reg1)	;ld rp,nn
+	and	a,0FH
+	sla	a
+	sla	a
+	sla	a
+	sla	a
+	or	a,01H
+	ex	de,hl
+	jp	endahl
+load4	ld	a,(reg1)	;ld rp,rp
+	cp	a,spreg
+	call	nz,aerror
+	ld	l,0F9H
+	ld	a,(reg2)
+	cp	a,hlreg
+	jr	nz,load41
+	ld	a,l		;ld sp,hl
+	jp	end1
+load41	ld	h,l
+	cp	a,ixreg
+	jr	nz,load42
+	ld	l,0DDH		;ld sp,ix
+	jr	load43
+load42	cp	a,iyreg
+	call	nz,aerror
+	ld	l,0FDH		;ld sp,iy
+load43	ld	a,(xprval)
+	or	a,a
+	call	nz,aerror
+	jp	end2
+load5	call	xprshn		;ld rp,(
+	ld	de,(xprval)
+	ld	a,(regflg)
+	or	a,a
+	call	nz,aerror
+	call	clspar		;ld rp,(nn)
+	ld	a,(reg1)
+	cp	a,hlreg
+	jr	nz,load51
+	ld	a,2AH
+	ex	de,hl
+	jp	endahl
+load51	cp	a,ixreg
+	jr	nz,load52
+	ld	hl,2ADDH	;ld ix,(nn)
+	jr	load53
+load52	cp	a,iyreg
+	jr	nz,load54
+	ld	hl,2AFDH	;ld iy,(nn)
+load53	ld	bc,(savval)
+	ld	a,b
+	or	a,c
+	call	nz,aerror
+	jp	end4
+load54	ld	l,0EDH		;ld dd,(nn)
+	ld	a,(reg1)
+	and	a,0FH
+	sla	a
+	sla	a
+	sla	a
+	sla	a
+	or	a,4BH
+	ld	h,a
+	jp	end4
+load6	call	xprshn		;ld (
+	call	clspar
+	call	readch		;ld (??)
+	cp	a,','
+	call	nz,serror
+	ld	a,(regflg)	;ld (??),
+	ld	(reg1),a
+	ld	hl,(xprval)
+	ld	(savval),hl
+	ld	a,(regflg)
+	and	a,rpmask
+	jp	z,load8
+	call	xprshn		;ld (rp),
+	ld	a,(regflg)
+	ld	(reg2),a
+	and	a,rmask
+	jr	z,load7
+	ld	a,(reg1)	;ld (rp),r
+	cp	a,hlreg
+	jr	nz,load61
+	ld	a,(reg2)
+	and	a,0FH
+	or	a,70H		;ld (hl),r
+	jp	end1
+load61	cp	a,ixreg
+	jr	nz,load62
+	ld	l,0DDH		;ld (ix+d),r
+	jr	load63
+load62	cp	a,iyreg
+	jr	nz,load64
+	ld	l,0FDH		;ld (iy+d),r
+load63	ld	a,(reg2)
+	and	a,0FH
+	or	a,70H
+	ld	h,a
+	ld	a,(savval)
+	jp	endhla
+load64	ld	a,(reg2)
+	cp	a,areg
+	call	nz,aerror
+	ld	a,(reg1)	;ld (rp),a
+	cp	a,bcreg
+	jr	nz,load65
+	ld	a,02H		;ld (bc),a
+	jp	end1
+load65	cp	a,dereg
+	call	nz,aerror
+	ld	a,12H		;ld (de),a
+	jp	end1
+load7	and	a,0FH
+	call	nz,aerror
+	ld	hl,(xprval)	;ld (rp),n
+	ld	a,h
+	cp	a,0
+	jr	z,load70
+	cp	a,0FFH
+	call	nz,verror	;value error
+load70	ld	c,l
+	ld	a,(reg1)
+	cp	a,hlreg
+	jr	nz,load71
+	ld	h,l
+	ld	l,36H
+	jp	end2
+load71	cp	a,ixreg
+	jr	nz,load72
+	ld	l,0DDH		;ld (ix+d),n
+	jr	load73
+load72	cp	a,iyreg
+	call	nz,aerror
+	ld	l,0FDH		;ld (iy+d),n
+load73	ld	h,36H
+	ld	a,(savval)
+	ld	e,a
+	ld	d,c
+	jp	end4
+load8	call	xprshn		;ld (nn),a
+	ld	a,(regflg)
+	cp	a,areg
+	jr	nz,load9
+	ld	a,32H
+	ld	hl,(savval)
+	jp	endahl
+load9	and	a,rpmask
+	call	z,aerror
+	ld	a,(regflg)
+	cp	a,hlreg		;ld (nn),rp
+	jr	nz,load91
+	ld	a,22H
+	ld	hl,(savval)
+	jp	endahl
+load91	cp	a,ixreg
+	jr	nz,load92
+	ld	l,0DDH		;ld (nn),ix
+	jp	load93
+load92	cp	a,iyreg
+	jr	nz,load94
+	ld	l,0FDH		;ld (nn),iy
+load93	ld	h,22H
+	jr	load95
+load94	ld	a,(regflg)	;ld (nn),rp
+	and	a,0FH
+	sla	a
+	sla	a
+	sla	a
+	sla	a
+	or	a,43H
+	ld	h,a
+	ld	l,0EDH
+load95	ld	de,(savval)
+	jp	end4
+;
+;
+;	class 9 - push pop
+;
+pshpop	call	xprshn
+	ld	a,(regflg)
+	and	a,rpmask
+	call	z,aerror
+	ld	a,(regflg)	;push/pop rp
+	cp	a,ixreg
+	jp	z,phpp2
+	cp	a,iyreg
+	jp	z,phpp3
+	cp	a,spreg
+	call	z,aerror
+	ld	a,(regflg)	;push/pop hl,de,bc but NOT SP
+	cp	a,afreg
+	jr	nz,phpp1
+	ld	a,3		;push af
+phpp1	and	a,0FH
+	rlca
+	rlca
+	rlca
+	rlca
+	ld	b,a
+	ld	a,(opcode)
+	add	a,b
+	jp	end1
+phpp2	ld	l,0DDH		;push/pop ix
+	jr	phpp4
+phpp3 	ld	l,0FDH		;push/pop iy
+phpp4	ld	a,(opcode)
+	add	a,20H
+	ld	h,a
+	jp	end2
+;
+;
+;	class 10 - exchange (ex)	OK
+;
+exchng	call	readch
+	cp	a,'('
+	jp	nz,xchg5
+	call	xprshn
+	ld	a,(regflg)
+	cp	a,spreg
+	call	nz,aerror
+	call	clspar		;ex (sp),
+	call	readch
+	cp	a,','
+	call	nz,serror
+	call	xprshn
+	ld	a,(regflg)
+	cp	a,ixreg
+	jp	z,xchg1
+	cp	a,iyreg
+	jp	nz,xchg3
+	ld	l,0FDH		;ex (sp),iy
+	jp	xchg2
+xchg1	ld	l,0DDH		;ex (sp),ix
+xchg2	ld	h,0E3H
+	jp	end2
+xchg3	cp	a,hlreg		;ex (sp),hl
+	call	nz,aerror
+	ld	a,0E3H
+	jp	end1
+	;
+xchg5	call	backup
+	call	xprshn
+	ld	a,(regflg)	;  if (rp=="af")
+	cp	a,afreg
+	jr	nz,xchg6
+	call	readch		;ex af
+	cp	a,','
+	call	nz,serror
+	call	readch		;ex af,
+	cp	a,'a'
+	call	nz,aerror
+	call	readch
+	cp	a,'f'
+	call	nz,aerror
+	call	readch
+	cp	a,''''
+	call	nz,aerror
+	ld	a,08H		;ex af,af'
+	jp	end1
+xchg6	cp	a,dereg
+	call	nz,aerror
+	call	readch		;ex de
+	cp	a,','
+	call	nz,aerror
+	call	xprshn		;ex de,
+	ld	a,(regflg)
+	cp	a,hlreg
+	call	nz,aerror
+	ld	a,0EBH		;ex de,hl
+	jp	end1
+;
+;
+;	class 11 - returns.	ret, ret <cc>, reti, retn   OK
+;
+;
+return	call	readch		;if (operand)
+	push	af
+	call	backup
+	pop	af
+	cp	a,cr
+	jp	z,rtrn1
+	cp	a,';'
+	jp	z,rtrn1
+	call	xprshn		;  expression
+	xor	a,a		;  reset "undefined" flag set by "xprshn"
+	ld	(udfflg),a
+	call	ctsrch		;  search condition table
+	cp	a,8		;  if (condition)
+	call	nc,serror
+	rlca			;    instruction
+	rlca
+	rlca
+	and	a,38H
+	add	a,0C0H
+	jr	rtrn2		;  else
+rtrn1	ld	a,(opcode)	;    instruction=opcode
+rtrn2	jp	end1
+;
+;
+;	class 12 - bit,set,res
+;
+;
+bitops	call	xprshn		;bit
+	ld	a,(xprval)
+	ld	(savval),a	;bit n
+	and	a,0F8H
+	call	nz,aerror
+	call	readch
+	cp	a,','
+	call	nz,serror
+	call	readch		;bit n,
+	cp	a,'('
+	jp	z,btst1
+	call	backup
+	call	xprshn
+	ld	a,(regflg)
+	and	a,rmask
+	call	z,aerror
+	ld	l,0CBH		;bit n,r
+	ld	a,(savval)
+	sla	a
+	sla	a
+	sla	a
+	ld	b,a
+	ld	a,(opcode)
+	and	a,0F8H
+	or	a,b
+	ld	b,a
+	ld	a,(regflg)
+	and	a,07H
+	or	a,b
+	ld	h,a
+	jp	end2
+	;
+btst1	call	xprshn		;bitop  n,(
+	ld	a,(regflg)
+	cp	a,hlreg
+	jr	nz,btst2
+	ld	l,0CBH		;bitop  n,(hl)
+	ld	a,(savval)
+	sla	a
+	sla	a
+	sla	a
+	ld	b,a
+	ld	a,(opcode)
+	or	a,b
+	ld	h,a
+	call	clspar
+	jp	end2
+
+btst2	cp	a,ixreg
+	jr	nz,btst21
+	ld	hl,0CBDDH	;bitop  n,(ix+p
+	jr	btst22
+btst21	cp	a,iyreg
+	call	nz,aerror
+	ld	hl,0CBFDH	;bitop  n,(iy+p
+btst22	ld	a,(xprval)
+	ld	e,a
+	ld	a,(savval)
+	sla	a
+	sla	a
+	sla	a
+	ld	b,a
+	ld	a,(opcode)
+	or	a,b
+	ld	d,a
+	call	clspar		;bitop  n,(iz+p)
+	jp	end4
+;
+;
+;	class 13 - inc,dec
+;
+incdec	call	readch
+	cp	a,'('
+	jr	z,ncdc1
+	call	backup		;inc ?
+	call	xprshn
+	ld	a,(regflg)
+	ld	b,a
+	and	a,rmask
+	jr	z,ncdc2
+	ld	a,b		;inc r
+	and	a,07H
+	rlca
+	rlca
+	rlca
+	ld	b,a
+	ld	a,(opcode)
+	or	a,b
+	jp	end1
+ncdc1	call	xprshn		;inc (?
+	call	clspar
+	ld	a,(opcode)	;inc (hl)
+	ld	b,a
+	ld	a,30H
+	or	a,b
+	ld	(opcode),a
+	ld	a,(regflg)	;inc(??)
+	cp	a,hlreg
+	jr	nz,ncdc11
+	ld	a,(opcode)
+	jp	end1
+ncdc11	cp	a,ixreg
+	jr	nz,ncdc12
+	ld	a,0DDH		;inc (ix+p)
+	jr	ncdc13
+ncdc12	cp	a,iyreg
+	call	nz,aerror
+	ld	a,0FDH		;inc (iy+p)
+ncdc13	ld	l,a
+	ld	a,(opcode)
+	ld	h,a
+	ld	a,(xprval)
+	jp	endhla
+ncdc2	ld	a,b
+	and	a,rpmask
+	call	z,aerror
+	ld	a,b
+	cp	a,ixreg
+	jr	nc,ncdc21	;inc rp
+	and	a,0FH
+	sla	a
+	sla	a
+	sla	a
+	sla	a
+	ld	b,a
+	ld	a,(opcode+1)
+	add	a,b
+	jp	end1
+ncdc21	ld	a,(opcode+1)
+	or	a,20H
+	ld	h,a
+	ld	a,b
+	cp	a,ixreg
+	jr	nz,ncdc22
+	ld	l,0DDH		;inc ix
+	jp	end2
+ncdc22	cp	a,iyreg
+	call	nz,aerror
+	ld	l,0FDH		;inc iy
+	jp	end2
+;
+;
+;	class 14 - pseudo operators
+;
+pseudo	ld	a,(opcode)
+	dec	a
+	add	a,a
+	ld	e,a
+	ld	d,0
+	ld	hl,psdtab
+	add	hl,de
+	ld	e,(hl)
+	inc	hl
+	ld	d,(hl)
+	ex	de,hl
+	jp	(hl)
+;
+;
+psdtab	dw	equop		; 1 equ
+	dw	dsop		; 2 defs
+	dw	dbop		; 3 defb
+	dw	dwop		; 4 defw
+	dw	endop		; 5 end
+	dw	orgop		; 6 org
+	dw	listop		; 7 list
+	dw	include		; 8
+	dw	ifop		; 9 if
+	dw	endifop		;10 endif
+	dw	forgop		;11 false origin
+	dw	reorgop		;12 re-origin
+;
+;
+equop	ld	a,(havlbl)	;if (not have_label)
+	or	a,a
+	jr	nz,equop0
+	call	lerror		;  "label error"
+	jp	ndstmt		;else
+equop0	ld	a,equtyp	;  linetype="equ"
+	ld	(lintyp),a
+	call	xprshn		;  expression
+	ld	a,(passno)	;  if (pass1)
+	or	a,a
+	jr	nz,equop1
+	ld	hl,(xprval)	;    put value into symtab
+	ex	de,hl
+	ld	hl,(symadr)
+	ld	(hl),e
+	inc	hl
+	ld	(hl),d
+equop1	ld	hl,00		;  length=0
+	ld	(length),hl
+	jp	ndstmt
+;
+;
+dsflag	db	0
+dslgth	dw	0
+;
+dsop	ld	a,dstyp		;linetype="ds"
+	ld	(lintyp),a
+	call	xprshn		;expression
+	ld	hl,(xprval)	;length=exprval
+	ld	(length),hl
+	ld	de,(dslgth)
+	add	hl,de		;dslgth=dslgth+length
+	ld	(dslgth),hl
+	ld	a,true		;dsflag=true
+	ld	(dsflag),a
+	ld	a,(hexflg)	;if (hexflag)
+	cp	a,true
+	jr	nz,dsop1
+	ld	a,(passno)	;  if (pass2)
+	or	a,a
+	jr	z,dsop1
+	ld	a,(hxbfcnt)	;    if (hxbfcount<>0)
+	or	a,a
+	call	nz,wrhxbff	;      write hex record
+	ld	hl,(pchex)	;    pchex=pchex+length
+	ld	de,(length)
+	add	hl,de
+	ld	(pchex),hl
+	ld	(ldaddr),hl	;    load address=pchex
+	ld	a,false		;    dsflag=false
+	ld	(dsflag),a
+dsop1	jp	ndstmt
+;
+;
+dbop	ld	a,dbtyp		;linetype="db"
+	ld	(lintyp),a
+	call	dsfill		;generate zero fill if previous "ds"
+	xor	a,a		;length=0
+	ld	(length),a	;repeat
+dbop1	call	xprshn		;  expression
+	ld	a,(xprtyp)	;  if (exprtype==string)
+	cp	a,strtyp
+	jr	nz,dbop2
+	ld	hl,(length)	;    length=length+stringlgth
+	ld	de,(strlth)
+	add	hl,de
+	ld	(length),hl
+	jr	dbop3
+dbop2	cp	a,notype	;  elseif (exprtype<>notype)
+	jp	z,dbop31
+dbop21	ld	a,(xprval)	;    data_buffer[fas]=exprval
+	ld	hl,(datfas)
+	ld	(hl),a
+	inc	hl		;    fas=fas+1
+	ld	(datfas),hl
+	ld	a,(length)	;    length=length+1
+	inc	a
+	ld	(length),a
+dbop3	call	readch		;  readch
+	cp	a,','
+	jr	z,dbop1		;  until (ch<>',')
+dbop31	call	backup		;backup one char
+	jp	ndstmt
+;
+;
+dwop	ld	a,dbtyp		;linetype="defw"
+	ld	(lintyp),a
+	call	dsfill		;if previous "ds" generate zero fill
+	ld	hl,datbff	;data buffer fas=0
+	ld	(datfas),hl	;repeat
+dwop1	call	xprshn		;  expression
+	ld	hl,(datfas)
+	ld	de,(xprval)
+	ld	(hl),e
+	inc	hl
+	ld	(hl),d
+	inc	hl
+	ld	(datfas),hl
+	ld	hl,length
+	inc	(hl)
+	inc	(hl)
+	call	readch
+	cp	a,','		;  until (ch<>',')
+	jr	z,dwop1
+	call	backup		;backup one character
+	jp	ndstmt
+;
+endop	ld	a,orgtyp	;linetype="end"
+	ld	(lintyp),a
+endop1 	ld	a,true		;endflag=true
+	ld	(endflg),a
+	ld	hl,00		;length=0
+	ld	(length),hl
+	ld	hl,linbff	;insert <cr> at end of source in case none
+	ld	(lnbptr),hl	;  there already.
+	ld	a,cr
+	ld	(hl),a
+	jp	ndstmt
+;
+;
+orgop	ld	a,orgtyp	;linetype="org"
+	ld	(lintyp),a
+	call	xprshn		;expression
+	ld	hl,(xprval)	;if (exprval<pc)
+	ld	de,(pc)
+	call	cphlde
+	jp	nc,orgop1
+	call	berror		;  argument error
+	jp	ndstmt
+orgop1	ld	a,(passno)	;if (pass 2)
+	or	a,a
+	jr	z,orgop4
+	ld	a,(hexflg)	;  if (hexflg)
+	cp	a,true
+	jr	nz,orgop3
+	ld	a,(hxbfcnt)	;    if (hxbfcnt<>0)
+	or	a,a
+	call	nz,wrhxbff	;      write hex record
+	ld	(pchex),hl	;    pchex=exprval
+	ld	(ldaddr),hl	;    load_address=exprval
+	jr	orgop4		;  else
+orgop3	call	cphlde		;    while (exprval<>pc)
+	jr	z,orgop4
+	xor	a,a		;      write(0)
+	call	wrbyte
+	inc	de
+	jr	orgop3
+orgop4	ld	(pc),hl		;pc=exprval
+	ld	hl,00		;length=0
+	ld	(length),hl
+	jp	ndstmt
+;
+;
+on	db	3,'on'
+off	db	4,'off'
+;
+listop	ld	a,comtyp	;linetype=comment
+	ld	(lintyp),a
+	ld	a,(passno)
+	or	a,a		;if pass2
+	jr	z,lstp4
+	ld	a,(lstflg)
+	ld	c,a		;  oldlistflag=listflag
+	call	getnam
+	ld	hl,namlth	;  if (token=='off')
+	ld	de,off
+	call	cpstrg
+	jr	nz,lstp1	
+	ld	a,0		;    list off
+	jr	lstp3
+lstp1	ld	de,on		;elseif (token=='on')
+	call	cpstrg
+	jr	nz,lstp2
+	ld	a,1		;  list on
+	ld	(lstcls),a	;  list_close=true
+	jr	lstp3
+lstp2	call	aerror		;else
+	ld	a,1		;  list on
+lstp3	ld	(lstflg),a
+lstp4	jp	ndstmt
+;
+;
+movnam	push	hl		;move name from "nambff" to ^DE converting
+	push	de		;  to U/C
+	ld	hl,namlth
+	ld	b,(hl)
+	inc	hl
+	dec	b
+mvnm1	ld	a,(hl)
+	inc	hl
+	call	lctouc
+	ld	(de),a
+	inc	de
+	djnz	mvnm1
+	pop	de
+	pop	hl	
+	ret
+;
+;
+level	dw	0
+ppfcb	ds	2
+;
+include	push	hl
+	push	de
+	ld	de,(level)	;HL=^index[level]
+	ld	hl,buffers
+	add	hl,de
+	add	hl,de
+	ld	a,(hl)
+	inc	hl
+	ld	h,(hl)
+	ld	l,a
+	ld	de,(ipbndx)	;index[level]=ipbndx
+	ld	(hl),e
+	inc	hl
+	ld	(hl),d
+	inc	hl
+	ld	de,(nlines)	;lineno[level]=nlines	
+	ld	(hl),e
+	inc	hl
+	ld	(hl),d
+	inc	hl
+	ld	hl,level	;level=level+1
+	inc	(hl)
+	ld	a,(level)
+	cp	a,maxlvl+1
+	jr	c,incl0
+	call	dspnxt
+	db	bel,cr,lf,lf,'"include" nesting level exceeded',0
+	jp	abort
+incl0	ld	de,(level)
+	ld	hl,buffers	;buffer pointer vector
+	add	hl,de
+	add	hl,de
+	ld	a,(hl)
+	inc	hl
+	ld	h,(hl)
+	ld	l,a
+	ld	de,4		;skip index, nlines
+	add	hl,de
+	ld	(ppfcb),hl	;^fcb[level]
+	ex	de,hl
+	call	inifcb
+	call	readch		;drive
+	sub	a,'a'-1		;convert to number. A=1, B=2 ....
+	ld	(de),a
+	inc	de
+	call	readch		;":"
+	cp	a,':'
+	call	nz,serror
+	call	getnam		;name
+	call	movnam		;move name to fcb ^DE in U/C
+	call	readch		;"."
+	cp	a,'.'
+	call	nz,serror
+	call	getnam		;extension
+	ld	a,(namlth)
+	dec	a
+	ld	b,a
+	ld	a,(ndots)
+	add	a,b
+	ld	(ndots),a
+	ld	hl,(ppfcb)
+	ld	de,9
+	add	hl,de
+	ex	de,hl
+	call	movnam
+	ld	hl,(ppfcb)
+	ld	(fcb),hl
+	call	opnfil
+	jr	nz,incld1 
+	call	ferror		;  "include" file not found
+	jp	incld9
+incld1	ld	hl,(ppfcb)
+	call	dspfnm
+	ld	hl,ch4dsp
+	ld	de,(level)
+	add	hl,de
+	ld	a,(hl)
+	ld	(chdsp),a
+	ld	hl,(ppfcb)	;set new file
+	ld	(pipfcb),hl
+	ld	de,36
+	add	hl,de
+	ld	(ipbuff),hl
+	ld	de,bffsiz
+	add	hl,de
+	ld	(ipbndx),hl	;this will force a read
+	ld	(ipbend),hl	;set end of new buffer
+	ld	hl,-1		;nlines=-1
+	ld	(nlines),hl
+incld9	pop	de
+	pop	hl
+	jp	ndstmt
+;
+;
+nocode	ds	1
+;
+ifop	call	dsfill		;zero fill if previous "ds" ?????
+	call	xprshn		;expression
+	ld	a,(xprval)	;nocode=not exprval
+	xor	a,1
+	ld	(nocode),a
+	jp	ndstmt
+;
+;
+endifop	ld	a,false		;nocode=false
+	ld	(nocode),a
+	jp	ndstmt
+;
+;
+forgop	ld	a,orgtyp	;linetype="org"
+	ld	(lintyp),a
+	call	xprshn		;expression
+	ld	hl,(xprval)	;if (exprval<pc)
+	ld	de,(pc)
+	call	cphlde
+	jp	nc,forgop1
+	call	aerror		;  argument error
+	jp	ndstmt
+forgop1	ld	a,(passno)	;if (pass 2)
+	or	a,a
+	jr	z,forgop4
+	ld	a,(hexflg)	;  if (hexflg)
+	cp	a,true
+	jr	nz,forgop3
+	ld	a,(hxbfcnt)	;    if (hxbfcnt<>0)
+	or	a,a
+	call	nz,wrhxbff	;      write hex record
+	ld	hl,(ldaddr)	;    ldaddr=ldaddr-1
+	dec	hl
+	ld	(ldaddr),hl
+	jr	forgop4		;  else
+forgop3	call	cphlde		;    while (exprval<>pc)
+	jr	z,forgop4
+	xor	a,a		;      write(0)
+	call	wrbyte
+	inc	de
+	jr	forgop3
+forgop4	ld	hl,(xprval)	;pc=exprval
+	ld	(pc),hl
+	ld	hl,00		;length=0
+	ld	(length),hl
+	jp	ndstmt
+;
+;
+reorgop	ld	a,orgtyp	;linetype="org"
+	ld	(lintyp),a
+;	call	xprshn		;expression
+;	ld	hl,(xprval)	;if (exprval<pc)
+;	ld	de,(pc)
+;	call	cphlde
+;	jp	nc,orgop1
+;	call	aerror		;  argument error
+;	jp	ndstmt
+rorgop1	ld	a,(passno)	;if (pass 2)
+	or	a,a
+	jr	z,rorgop4
+	ld	a,(hexflg)	;  if (hexflg)
+	cp	a,true
+	jr	nz,rorgop3
+	ld	a,(hxbfcnt)	;    if (hxbfcnt<>0)
+	or	a,a
+	call	nz,wrhxbff	;      write hex record
+	ld	hl,(pchex)	;    pc=pchex
+	jr	rorgop4		;  else
+rorgop3	call	cphlde		;    while (exprval<>pc)
+	jr	z,rorgop4
+	xor	a,a		;      write(0)
+	call	wrbyte
+	inc	de
+	jr	rorgop3
+rorgop4	ld	(pc),hl		;pc=exprval
+	ld	hl,00		;length=0
+	ld	(length),hl
+	jp	ndstmt
+;
+;
+
+;
+;
+;	e n d   o f   s t a t e m e n t   p r o c e s s i n g
+;
+;
+chkend	push	af		;check that there is nothing else on line
+	call	readch
+	cp	a,';'		;???
+	jr	z,chnd1
+	cp	a,cr
+	jr	z,chnd1
+	cp	a,lf
+	jr	z,chnd1
+	cp	a,' '
+	jp	p,chnd0
+	add	a,40H
+chnd0	ld	(xch),a
+	call	xerror		;extra character(s) on line
+chnd1	pop	af
+	ret
+;
+;
+end1	ld	(inst),a
+	ld	a,1
+	jp	endlth
+;
+;
+end2	ld	(inst),hl
+	ld	a,2
+	jr	endlth
+;
+;
+endahl	ld	(inst),a
+	ld	(inst+1),hl
+	ld	a,3
+	jr	endlth
+;
+;
+endhla	ld	(inst),hl
+	ld	(inst+2),a
+	ld	a,3
+	jr	endlth
+;
+;
+end4	ld	(inst),hl
+	ld	(inst+2),de
+	ld	a,4
+	jp	endlth
+;
+;
+endlth	ld	(length),a
+;
+ndstmt	ld	a,(errflg)	;if (not error)
+	cp	a,' '
+	call	z,chkend	;  check end
+	ld	a,(nocode)	;if (nocode)
+	cp	a,true
+	jr	nz,ndst0
+	ld	hl,00		;  length=0
+	ld	(length),hl
+	ld	a,comtyp	;  linetype=comment
+	ld	(lintyp),a
+ndst0	ld	a,(errflg)	;if (errflg=='F')
+	cp	a,'F'
+	jr	nz,ndst01
+	call	dsplin		;  display line
+	call	dsperr		;  display error
+	jp	abort		;  abort
+ndst01	ld	a,(passno)	;elseif (pass2)
+	or	a,a
+	jp	z,ndst6
+	ld	a,(udfflg)	;  if (undefined)
+	or	a,a
+	jr	z,ndst1
+	ld	hl,(udfptr)
+	ld	(lnbptr),hl
+	call	uerror		;    errflg='U'
+ndst1	ld	a,(errflg)	;  if (errflg<>" ")
+	cp	a,' '
+	jr	z,ndst2
+	call	dsplin		;    display line
+	call	dsperr
+	ld	hl,(nerrs)	;    nerrors=nerrors+1
+	inc	hl
+	ld	(nerrs),hl
+	jr	ndst3
+ndst2	ld	a,(lstflg)	;  if ((lstflg)or(errflg))
+	or	a,a
+	jp	z,ndst5
+ndst3	call	lstlin		;    send line to .LST file
+	ld	a,(errflg)	;  if (errflg<>" ")
+	cp	a,' '
+	jp	z,ndst5
+	call	lsterr
+ndst5	ld	a,(length)	;  if ((length>0)and
+	ld	b,a
+	or	a,a
+	jr	z,ndst6
+	ld	a,(lintyp)	;      (line_type<>"ds"))
+	cp	a,dstyp
+	jr	z,ndst6
+	ld	hl,inst		;    for i=1 to length
+ndst51	ld	a,(hl)
+	inc	hl
+ndst55	call	wrbyte		;      write_byte
+	djnz	ndst51
+	;
+ndst6	ld	a,(switch)	;if (input switched)
+	cp	a,true
+	jr	nz,ndst61
+	xor	a,a
+	ld	(ndots),a	;  ndots=0
+	ld	hl,(totlns)
+	ld	de,(nlines)
+	inc	de		;line numbers start from 0
+	add	hl,de
+	ld	(totlns),hl
+	ld	hl,level	;  level=level-1
+	dec	(hl)
+	ld	hl,ch4dsp
+	ld	de,(level)
+	add	hl,de
+	ld	a,(hl)
+	ld	(chdsp),a
+	ld	hl,buffers
+	ld	de,(level)
+	add	hl,de
+	add	hl,de
+	ld	a,(hl)
+	inc	hl
+	ld	h,(hl)
+	ld	l,a		;HL=^index[level]
+	ld	e,(hl)
+	inc	hl
+	ld	d,(hl)
+	inc	hl
+	ld	(ipbndx),de
+	ld	e,(hl)
+	inc	hl
+	ld	d,(hl)
+	inc	hl
+	ld	(nlines),de
+	ld	(pipfcb),hl
+	ld	de,36
+	add	hl,de
+	ld	(ipbuff),hl
+	ld	de,bffsiz
+	add	hl,de
+	ld	(ipbend),hl
+	ld	hl,(pipfcb)
+	call	dspfnm
+ndst61	ld	hl,(pc)		;pc=pc+length
+	ld	de,(length)
+	add	hl,de
+	ld	(pc),hl
+	ld	a,(endflg)	;if not endflag
+	or	a,a
+	jp	z,next		;  go process next line
+	ld	a,(passno)
+	cpl			;pass=not pass
+	ld	(passno),a
+	cp	a,0
+	jp	z,endit
+	;
+	xor	a,a		;reset current extent
+	ld	hl,(pipfcb)
+	ld	bc,12
+	add	hl,bc
+	ld	(hl),a
+	ld	hl,(pipfcb)	;reset current record
+	ld	bc,32
+	add	hl,bc
+	ld	(hl),a
+	call	opnfil
+	call	dspnxt
+	db	cr,lf,lf,'Pass 2  ',cr,lf,0
+	ld	a,8
+	ld	(ndots),a
+	ld	hl,(pipfcb)
+	call	dspfnm
+	xor	a,a		;reset end-line flag
+	ld	(endflg),a
+	jp	pass2
+;
+;
+endit	ld	a,(hexflg)	;if (hex output)
+	cp	a,true
+	jr	nz,endit0
+	call	wrhxbff		;  move last hex record to disc
+	call	wrhxbff		;  terminator record
+endit0
+	ld	a,(objfas)	;if not new record
+	cp	a,128
+	jr	z,endit1
+	ld	a,eof		;  put ^Z into write buffer 
+	call	wrbyte
+	ld	a,128		;  force write
+endit1	ld	(objfas),a
+	call	wrbyte
+	ld	de,objfcb
+	ld	(fcb),de
+	ld	hl,(nerrs)	;if (nerrors==0)
+	ld	a,h
+	or	a,l
+	jr	nz,endt11
+	call	clsfil		;  close .COM file
+	jr	nz,endit2
+	call	dspnxt
+	db	cr,lf,bel,'Cannot close output file. Disc full?'
+	jp	abort		;else
+endt11	call	delfil		;  delete .COM file
+	;
+endit2	ld	a,cr
+	call	wrlist
+	ld	a,lf
+	call	wrlist
+	ld	a,(lstfas)	;if not new record
+	cp	a,128
+	jr	z,endt21
+	ld	a,eof		;  put ^Z into list buffer 
+	call	wrlist
+	ld	a,128		;  force write
+endt21	ld	(lstfas),a
+	call	wrlist
+	ld	de,lstfcb
+	ld	(fcb),de
+	ld	a,(lstcls)	;if (list_close)
+	or	a,a
+	jr	z,endt22
+	call	clsfil		;  close .LST file
+	jr	nz,endit3
+	call	dspnxt
+	db	cr,lf,bel,'Cannot close output file. Disc full?'
+	jp	abort		;else
+endt22	call	delfil		;  delete file
+	;
+endit3	ld	hl,(pc)
+	dec	hl
+	ld	de,lstadd
+	ld	a,h
+	call	cnv2hex
+	ld	a,l
+	call	cnv2hex
+	;
+	call	dspnxt
+ 	db	cr,lf,lf,'Last address used   = '
+lstadd 	db	'xxxxH',0
+	;
+	ld	hl,(stfas)
+	ld	de,nxtadd
+	ld	a,h
+	call	cnv2hex
+	ld	a,l
+	call	cnv2hex
+	call	dspnxt
+	db	cr,lf,'Next symbol address = '
+nxtadd	db	'xxxxH',0
+	;
+	ld	hl,(stfas)
+	ld	de,symtab
+	or	a,a
+	sbc	hl,de
+	ld	de,stlgth
+	ld	a,h
+	call	cnv2hex
+	ld	a,l
+	call	cnv2hex
+	call	dspnxt
+	db	cr,lf,'Symbol table length = '
+stlgth	db	'xxxxH',0
+	;
+	call	dspnxt
+	db	cr,lf,lf,'No. of symbol table searches = ',0
+	ld	hl,(nstsr)
+	ld	de,lnnobf	;errbff
+	call	decval
+	ld	hl,lnnobf	;errbff
+	call	dspdec
+	;
+	call	dspnxt
+	db	cr,lf,'No. of symbol table entries  = ',0
+	ld	hl,(nstnt)
+	ld	de,lnnobf	;errbff
+	call	decval
+	ld	hl,lnnobf	;errbff
+	call	dspdec
+	;
+	call	dspnxt
+ 	db	bel,cr,lf,lf,'Assembly complete.  ',0
+	;
+	ld	hl,(nlines)	;totlns+1 to account for line 0
+	ld	de,(totlns)
+	add	hl,de
+	inc	hl
+	ld	de,lnnobf
+	call	decval
+	ld	hl,lnnobf
+	call	dspdec
+	call	dspnxt
+	db	' lines, ',0
+	ld	hl,(nerrs)
+	ld	de,0
+	call	cphlde
+	jr	nz,endit5
+	call	dspnxt
+	db	'no errors',0
+	jr	endit6
+endit5	ld	hl,(nerrs)
+	ld	de,lnnobf	;errbff
+	call	decval		;put "nerrs" into "lineno"
+	ld	hl,lnnobf	;errbff
+	call	dspdec		;display "lineno"
+	call	dspnxt
+	db	' error',0
+	ld	hl,(nerrs)
+	ld	de,1
+	call	cphlde
+	jp	z,endit6
+	ld	a,'s'
+	call	dspch
+endit6	ld	a,'.'
+	call	dspch
+	jp	wboot
+;
+abort	call	dspnxt
+	db	bel,cr,lf,lf,'Assembly abandoned.',0
+	jp	wboot
+;
+;
+;
+;			Opcode Table
+;
+;	Each symbol table entry is of varying length.
+;
+;	The first byte contains the length of the opcode mnemonic plus one.
+;
+;	The second byte holds the first character of the name.
+;
+;	Following the name are 2 bytes holding the the order code
+;	and then a 1 byte type.
+;
+;	The table is searchec by hashing on the first character of the
+;	menmonic and then scanned serially.
+;
+;
+;			op-code table
+;
+;		index to alphabetical subsections
+;
+;
+opcndx	dw	opcta,opctb,opctc,opctd,opcte,opctf,opct0
+	dw	opcth,opcti,opctj,opct0,opctl,opct0,opctn
+	dw	opcto,opctp,opct0,opctr,opcts,opct0,opct0
+	dw	opct0,opct0,opctx,opct0,opct0
+;
+;			op-code table.
+;
+;	opcodes should be in order of frequency within sections.
+;
+opcta	db	3
+	db	4,'add',   80H, 86H, 6
+	db	4,'and',  0A0H,0A6H, 6
+	db	4,'adc',   88H, 8EH, 6
+opctb	db	1
+	db	4,'bit',  046H,   0,12
+opctc	db	8
+	db	5,'call', 0CDH,0C4H, 3
+	db	3,'cp',   0B8H,0BEH, 6
+	db	4,'cpd',  0EDH,0A9H, 1
+	db	5,'cpdr', 0EDH,0B9H, 1
+	db	4,'cpi',  0EDH,0A1H, 1
+	db	5,'cpir', 0EDH,0B1H, 1
+	db	4,'cpl',  02FH,   0, 1
+	db	4,'ccf',  03FH,   0, 1
+opctd	db	10
+	db	3,'db',      3,   0,14
+	db	3,'ds',      2,   0,14
+	db	3,'dw',      4,   0,14
+	db	4,'dec',   05H, 0BH,13
+	db	5,'defb',    3,   0,14
+	db	5,'defs',    2,   0,14
+	db	5,'defw',    4,   0,14
+	db	5,'djnz',  10H,   0, 4
+	db	4,'daa',   27H,   0, 1
+	db	3,'di',   0F3H,   0, 1
+opcte	db	6
+	db	3,'ei',   0FBH,   0, 1
+	db	3,'ex',   0EBH,   0,10
+	db	4,'equ',     1,   0,14
+	db	4,'exx',  0D9H,   0, 1
+	db	4,'end',     5,   0,14
+	db	6,'endif',  10,   0,14
+opctf	db	1
+	db	5,'forg',   11,   0,14
+opcth	db	1
+	db	5,'halt', 076H,   0, 1
+opcti	db	11
+	db	4,'inc',   04H, 03H,13
+	db	3,'in',   0DBH,   0, 7
+	db	4,'ind',  0EDH,0AAH, 1
+	db	5,'indr', 0EDH,0BAH, 1
+	db	4,'ini',  0EDH,0A2H, 1
+	db	5,'inir', 0EDH,0B2H, 1
+	db	8,'include', 8,   0,14 
+	db	3,'if',      9,   0,14
+	db	4,'im0',  0EDH, 46H, 1
+	db	4,'im1',  0EDH, 56H, 1
+	db	4,'im2',  0EDH, 5EH, 1
+opctj	db	2
+	db	3,'jr',   018H,   0, 4
+	db	3,'jp',   0C3H, 0C2H,3
+opctl	db	6
+	db	3,'ld',      0,   0, 8
+	db	4,'ldd',  0EDH,0A8H, 1
+	db	5,'lddr', 0EDH,0B8H, 1
+	db	4,'ldi',  0EDH,0A0H, 1
+	db	5,'ldir', 0EDH,0B0H, 1
+	db	5,'list',    7,   0,14
+opctn	db	2
+	db	4,'neg',  0EDH, 44H, 1
+	db	4,'nop',  000H,   0, 1
+opcto	db	7
+	db	3,'or',   0B0H,0B6H, 6
+	db	4,'out',  0D3H,   0, 7
+	db	4,'org',     6,   0,14
+	db	5,'otdr', 0EDH,0BBH, 1
+	db	5,'otir', 0EDH,0B3H, 1
+	db	5,'outd', 0EDH,0ABH, 1
+	db	5,'outi', 0EDH,0A3H, 1
+opctp	db	2
+	db	4,'pop',  0C1H,   0, 9
+	db	5,'push', 0C5H,   0, 9
+opctr	db	17
+	db	4,'ret',  0C9H,   0,11
+	db	3,'rl',    10H,   0, 2
+	db	4,'rla',   17H,   0, 1
+	db	4,'rlc',   00H,   0, 2
+	db	5,'rlca',  07H,   0, 1
+	db	4,'rld',  0EDH, 6FH, 1
+	db	3,'rr',    18H,   0, 2
+	db	4,'rra',   1FH,   0, 1
+	db	4,'rrc',   08H,   0, 2
+	db	5,'rrca',  0FH,   0, 1
+	db	4,'rrd',  0EDH, 67H, 1
+	db	5,'read',    8,   0,14 
+	db	4,'rst',  0C7H,   0, 5
+	db	4,'res',  086H,   0,12
+	db	5,'reti', 0EDH, 4DH, 1
+	db	5,'retn', 0EDH, 45H, 1
+	db	6,'reorg', 12,    0,14
+opcts	db	7
+	db	4,'sub',  90H,  96H, 6
+	db	4,'sbc',  98H,  9EH, 6
+	db	4,'scf',  37H,    0, 1
+	db	4,'sla',  20H,    0, 2
+	db	4,'sra',  28H,    0, 2
+	db	4,'srl',  38H,    0, 2
+	db	4,'set', 0C6H,    0,12
+opctx	db	1
+	db	4,'xor', 0A8H, 0AEH, 6
+opct0	db	1
+	db	1,' '
+;
+;
+cndtbl	db	3,'nz'		;condition table
+	db	2,'z '
+	db	3,'nc'
+	db	2,'c '
+	db	3,'po'
+	db	3,'pe'
+	db	2,'p '
+	db	2,'m '
+;
+;
+;		registers have to be entered by hashing.
+;
+;
+regtbl	db	2,'b',  0,0, 0,0, 10H		;registers
+	db	2,'c',  0,0, 0,0, 11H
+	db	2,'d',  0,0, 0,0, 12H
+	db	2,'e',  0,0, 0,0, 13H
+	db	2,'h',  0,0, 0,0, 14H
+	db	2,'l',  0,0, 0,0, 15H
+	db	2,'a',  0,0, 0,0, 17H
+	db	3,'bc', 0,0, 0,0, 20H
+	db	3,'de', 0,0, 0,0, 21H
+	db	3,'hl', 0,0, 0,0, 22H
+	db	3,'sp', 0,0, 0,0, 23H
+	db	3,'ix', 0,0, 0,0, 24H
+	db	3,'iy', 0,0, 0,0, 25H
+	db	3,'af', 0,0, 0,0, 26H
+	db	2,'i',  0,0, 0,0, 18H
+	db	2,'r',  0,0, 0,0, 19H
+;
+;
+ch4dsp	db	'.','_',',',':',';'
+;
+;
+pipfcb	ds	2	;holds address of current input fcb
+;
+objfcb 	ds	1	;output file control block
+	ds	35
+lstfcb	ds	1	;list    "	"	"
+	ds	35
+;
+;
+buffers	dw	level0,level1,level2,level3,level4
+;
+level0	ds	2	;index to buffer
+	ds	2	;current line no.
+srcfcb	ds	36	;fcb
+srcbff	ds	bffsiz	;buffer
+srcend	equ	$	;end of buffer
+;
+level1	ds	2	;0
+	ds	2	;2
+	ds	36	;4
+	ds	bffsiz	;40
+;
+level2	ds	2
+	ds	2
+	ds	36
+	ds	bffsiz
+;	
+level3	ds	2
+	ds	2
+	ds	36
+	ds	bffsiz
+;
+level4	ds	2
+	ds	2
+	ds	36
+	ds	bffsiz
+;
+ipbndx	ds	2	;index for current input buffer (source or read)
+ipbuff	ds	2	;holds address of current input buffer
+ipbend	ds	2	;holds address of end of current input buffer
+;
+;
+objfas 	ds	2	;object file buffer pointer
+objbff 	ds	128	;object file buffer
+lstfas	ds	2	;list file buffer pointer
+lstbff	ds	128	;list file buffer
+;
+;
+;		hash table
+;
+hshtbl	ds	512
+;
+;
+;			Symbol Table
+;
+;	Each symbol table entry is of varying length.
+;
+;	The first byte contains the length of the name plus one.
+;
+;	The second byte holds the first character of the name.
+;
+;	Following the name are 2 bytes of address (or value for "equs"
+;	and 1 byte of type (used in opcodes).
+;
+;
+	db	'symtab>>'
+;
+symtab	ds	0	;first available space in "symtab"
+;
+;
+	end
+; 
+;;
