@@ -1,0 +1,58 @@
+;
+;	Something to build to test the ALTCPM port
+;
+
+wboot	equ	4200H
+cdrive	equ	4204H
+bdos 	equ	4205H
+dffcb	equ	425CH
+
+lf	equ	10
+cr	equ	13
+
+
+	call	dspnxt
+	db	'Hello World ! ',cr,lf,0
+	call	dspnxt
+	db	'Press R to reboot..',cr,lf,0
+
+
+wait	call	getch
+	cp	a,'r'
+	jr	z,exit
+	cp	a,'R'
+	jr	nz,wait
+exit	jp      wboot
+
+
+;
+getch	exx			;get, and echo, character from keyboard
+	ld	c,1
+	call	bdos
+	exx
+	ret
+;
+dspch	push	af		;send character in A to vdu
+	exx
+	ld	c,2
+	ld	e,a
+	call	bdos
+	exx
+	pop	af
+	ret
+;
+dspnxt	ex	(sp),hl		;display data message following call
+	push	af		;terminator is <nul>
+dspnx1	ld	a,(hl)
+	inc	hl
+	or	a,a
+	jr	z,dspnx2
+	call	dspch
+	jr	dspnx1
+dspnx2	pop	af
+	ex	(sp),hl
+	ret
+; 
+	end
+; 
+;;
