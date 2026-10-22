@@ -1,6 +1,7 @@
 
 This is a crazy ancient editor, gathered from an obscure BBS archive.
-The following instructions have been recreated by using an AI engine, I hardly believe the average CP/M user could guess how this editor was supposed to work !
+The following instructions have been recreated by using an AI engine, 
+I hardly believe the average CP/M user could guess how this editor was supposed to work !
 
 
 
