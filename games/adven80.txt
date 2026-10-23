@@ -2,8 +2,10 @@
 All the files have been prepared to run on an ALTCPM system, you also
 need an ALTCPM version of M80.COM and L80.COM.
 
-After editing your adventure game (or just use SAMPADV.ADV), run MAKEADV,
+After editing your adventure game to build SAMPADV.ADV run MAKEADV,
 (it is provided in both .BAS and .COM form)..
+
+NOTE: You will need to use MKTOMBS for TOMBS.ADV !
 
 =============================================================================
 *** MAKEADV - AN ADVENTURE DATABASE CONVERSION UTILITY ***
