@@ -1,0 +1,1341 @@
+OBJLOC
+
+STATUH  24
+TCKEYS  255
+SLAMP   1
+EFLAME	12
+STOFT   1
+MKYSTM  255  
+CUBEP	16
+RTELEP 255
+RINVIS  23 
+BRCSTR  24
+BW1     25
+BKN2    7
+STAFFP  29
+STATPS 255
+TRIDEN  28
+GLNHAL  27
+STATUR  27
+BELTG   8
+JEWEL	255
+CLOUD	1	
+ZEUS	29 
+VNSGR   22
+SAPHIRE 45
+OPAL   255
+FOOD   255
+MIRROR  23
+SERP   255
+SHIP	28
+LEVER  255
+VIOD	34
+SPIDER	37
+SWORD	34
+AXE	44
+ARMOUR	6
+SPEAR	59
+ELF     40
+BOY    255 	
+DEMON  255
+RUINS  255
+RABB	47
+CHEST	69
+MAP    255
+FOUNT	70
+PAINTG	54
+BRICK  255
+HIDDEN 255
+BAT	57
+FRUIT	61
+FLUTE	48
+GUARD  255
+CATD   	39
+CRACK   63
+DOOR    40
+WALL   255	
+
+ENDTABLE
+
+OBJDES
+
+STATUH  1
+TCKEYS  2
+SLAMP   3
+EFLAME	4
+STOFT   5
+MKYSTM  6
+CUBEP	7
+RTELEP  8
+RINVIS  9
+BRCSTR  10
+BW1     11
+BKN2    12
+STAFFP  13
+STATPS  14
+TRIDEN  15
+GLNHAL  16
+STATUR  17
+BELTG   18
+JEWEL   19
+CLOUD	20
+ZEUS	21
+VNSGR   22
+SAPHIRE 23
+OPAL    24
+FOOD    25
+MIRROR  26
+SERP    27
+SHIP    28
+LEVER   29 
+VIOD    30
+SPIDER  31
+SWORD   32
+AXE     33
+ARMOUR  34
+SPEAR   35
+ELF     36
+BOY     37
+DEMON   38
+RUINS   39
+RABB    40
+CHEST   41
+MAP     42
+FOUNT   43
+PAINTG  44
+BRICK   45
+HIDDEN  46
+BAT     47
+FRUIT   48
+FLUTE   49
+GUARD   50
+CATD    51
+CRACK   52
+DOOR	53
+WALL    54
+AIR     67
+
+ENDTABLE
+
+OBPROP
+
+STATUH  LOOK,FEEL 
+TCKEYS  GET,LOOK,DROP		
+SLAMP	GET,LOOK,DROP,RUB
+EFLAME	GET,LOOK,DROP
+STOFT   SIT,LOOK,FEEL
+MKYSTM  GET,LOOK,DROP		
+CUBEP	GET,LOOK,FEEL,BREAK,DROP
+RTELEP  GET,LOOK,WEAR,DROP,WAVE
+RINVIS  GET,LOOK,WEAR,DROP,WAVE
+BRCSTR  GET,LOOK,WEAR,DROP
+BW1     READ,LOOK
+BKN2    READ,LOOK
+STAFFP  GET,LOOK,WAVE,FEEL,DROP
+STATPS  LOOK,FEEL,LISTEN
+TRIDEN  GET,LOOK,WAVE,THROW,FEEL 
+GLNHAL  GET,WEAR,LOOK
+STATUR  LOOK,FEEL 
+BELTG   LOOK,WEAR,GET,FEEL,RUB
+JEWEL	GET,LOOK,DROP,RUB
+CLOUD	LOOK,LISTEN
+ZEUS	LOOK,LISTEN
+VNSGR   LOOK,FEEL,GET,DROP
+SAPHIRE LOOK,GET,DROP,RUB
+OPAL    LOOK,GET,DROP,RUB
+FOOD    LOOK,GET,DROP,EAT
+MIRROR  LOOK,GET,DROP,TOUCH,RUB
+SERP    FIGHT,LOOK,KILL,LISTEN
+SHIP    LOOK,LISTEN
+LEVER   PULL,PUSH,LOOK
+VIOD    LOOK,ENTER
+SPIDER  LOOK,FIGHT,KILL,LISTEN
+SWORD   LOOK,GET,DROP,RUB,WAVE
+AXE     LOOK,GET,DROP,RUB,WAVE
+ARMOUR  LOOK,GET,DROP,WEAR
+SPEAR   LOOK,GET,DROP,THROW
+ELF     LOOK,LISTEN,KILL,FEED
+BOY     LOOK,GET,DROP,LISTEN,FEED
+DEMON   LOOK,FIGHT,LISTEN
+RUINS   LOOK,ENTER
+RABB    LOOK,GET,DROP,RUB
+CHEST   LOOK,GET,DROP,OPEN
+MAP     LOOK,GET,DROP,READ
+FOUNT   DRINK,LOOK,LISTEN,GET
+PAINTG  LOOK,FEEL,PUSH,PULL
+BRICK   TOUCH,LOOK,PUSH,PULL
+HIDDEN  LOOK,TOUCH,PUSH
+BAT     FIGHT,FEED,KILL,LISTEN
+FRUIT   EAT,LOOK,GET,DROP
+FLUTE   PLAY,GET,LOOK,DROP
+GUARD   LOOK
+CATD    LOOK,FEED,LISTEN,RUB
+CRACK	LOOK,TOUCH,PULL
+DOOR	LOOK,PULL,PUSH,UNLOCK,OPEN,LOCK
+WALL	LOOK,FEEL
+AIR	LOOK,GET
+
+ENDTABLE
+
+OBJDSK
+
+STATUH  ' Statue of Hurcules stands before you%' 
+TCKEYS  ' Keyring with keys numbered 1 - 33%'           
+SLAMP   ' A Globe%'  
+EFLAME	' An everlasting blue flame%'    
+STOFT	' You see a finely carved ebony chair richly encrusted%'
+	' A with gold & JEWELS.%'
+MKYSTM  ' Invisible ring with 64 keys%'           
+CUBEP	' A CUBE pulsating with the Guardians rythmic sleep%'
+RTELEP  ' Ring of TELEportation%'           
+RINVIS  ' Ring of INVIsability%'           
+BRCSTR  ' Braclet of strength%'
+BW1     ' ANCIent Scroll of Wisdom %'
+BKN2    ' Book of Knowledge %'
+STAFFP  ' Staff of Power%'
+STATPS  ' Statue of Poseidon%'
+TRIDEN  ' Poseidon''s Trident%'
+GLNHAL  ' Shimering halo%'
+STATUR  ' Statue of Urania%'
+BELTG   ' Belt of greed%'
+JEWEL   ' emerald %'
+CLOUD   ' Swirling mist%'
+ZEUS    ' Faint image of ZEUS appeared%'
+VNSGR   ' Green rubbery substance%'
+SAPHIRE ' Red glemming gem%'
+OPAL    ' firey opal%'
+FOOD    ' Big bag of food%'
+MIRROR  ' Shimmering Mirror%'
+SERP    ' Large slimy serpent%'
+SHIP    ' restless Sea moans against the shore and rocks%'
+LEVER   ' Large lever'
+VIOD    ' emptyness%' 
+SPIDER  ' slow moving spider%'
+SWORD   ' shinny sword with strange markings%'
+AXE     ' dull axe%'
+ARMOUR  ' strong looking armour%'
+SPEAR   ' long spear%'
+ELF     ' small elflike creature%'
+BOY     ' small lost child%'
+DEMON   ' shimmering figure%'
+RUINS   ' lost city of Atlantis%'
+RABB    ' small rabbits foot%'
+CHEST   ' Large chest of magnificent jewels%'
+MAP     ' map of some of  the spheres%'
+FOUNT   ' small fountain of liquid%'
+PAINTG  ' large painting of Urania%'
+BRICK   ' loose brick%'
+HIDDEN  ' hidden tunnel%'
+BAT     ' small bat%'
+FRUIT   ' nice juicey apple%'
+FLUTE   ' flute playing strange music%'
+GUARD   ' Guardian of time%'
+CATD    ' small black cat%'
+CRACK	' slightly curved crack through which you see light%'
+DOOR    ' Large bronze sculpured door%'
+WALL	' Looks like some of the bricks are loose%'
+AIR	' it looks empty%'
+
+ENDTABLE
+
+MATCHW
+
+MATCHALL
+TEST	CL,61,ONC,FRUIT
+ACTION	PRM,114
+
+MATCHALL
+TEST	GES,54,02
+ACTION	ATF,54,01
+
+MATCHALL
+TEST	CL,70,OH,FOUNT,GES,54,01
+ACTION	PRM,125
+
+MATCHALL
+TEST	TF,59,80
+ACTION	PRM,58
+
+MATCHALL
+TEST	TF,17,01,TF,68,00
+ACTION	PRM,135,SF,68,01,EX
+
+MATCHALL
+TEST    TF,59,90
+ACTION  PRM,129,QT
+
+MATCHALL
+TEST	NCL,70,OC,FOUNT
+ACTION	SFF,13,10,DES,FOUNT
+
+MATCHALL
+TEST	CL,54
+ACTION	PRM,117
+
+MATCHALL
+TEST	CL,3,TF,54,00
+ACTION	SF,54,01
+
+MATCHALL
+TEST	CL,3,TF,54,01
+ACTION	SF,54,02,PRM,110
+
+MATCHALL
+TEST	CL,3,TF,54,02
+ACTION	SF,8,255,PRM,57,PRM,80
+
+MATCHALL
+TEST	TF,56,01,CL,66,TF,09,01
+ACTION	PRM,97,PF,9,PRM,73,PRM,83
+
+MATCHALL
+TEST	TF,09,00,TF,57,01,TF,56,01,CL,66
+ACTION	DES,STAFFP,DES,RABB,DES,RTELEP,DES,RINVIS,PRM,58,MV,20,GRUN
+
+MATCHALL
+TEST	CL,20,TF,57,01,TF,09,00,ONE,STAFFP
+ACTION	PRM,54,WT,20,MV,49,DES,FLUTE,DES,BOY,DES,CHEST,GRUN
+
+MATCHALL
+TEST	OW,GLNHAL,OH,BELTG
+ACTION	DES,BELTG,ATF,13,05
+
+MATCHALL
+TEST	CL,13,OC,STAFFP,OC,RTELEP
+ACTION	PRM,55,EX
+
+MATCH	WEAR,BRCSTR
+TEST	OC,INP
+ACTION	WR,INP,OK
+
+MATCH	ENTER,ANY
+TEST	OW,RTELEP,OC,STAFFP
+ACTION  MV,INP,PRM,117,EX
+
+MATCH	DRINK,ANY
+TEST	CL,70,TF,54,02
+ACTION	SF,54,00,PRM,115,EX
+
+MATCH	DRINK,ANY
+TEST	CL,70,TF,54,00
+ACTION	PRM,125,SFF,13,02,EX
+
+MATCH	PUSH,BRICK
+TEST	CL,68,OW,BRCSTR,TF,67,00
+ACTION	PRM,74,SF,67,01,EX
+
+MATCH	ENTER,HIDDEN
+TEST	CL,68,TF,67,01
+ACTION	PRM,79,MV,66,GRUN
+
+MATCH	RUB,RABB
+TEST	CL,42,TF,51,01,OC,RTELEP
+ACTION	SFF,13,02,SF,52,02,DR,RTELEP,CR,RTELEP,PRM,59,EX
+
+MATCH	RUB,RABB
+TEST	CL,42,OC,RABB
+ACTION	ATF,13,10,SF,51,01,CR,RTELEP,PRM,124,GRUN
+
+MATCH	LISTEN,SHIP
+TEST	CL,28,ONE,BELTG
+ACTION	PRM,69,EX
+
+MATCH	LISTEN,BAT
+TEST	OH,BAT
+ACTION	PRM,121,DES,BAT,EX
+
+MATCH	LISTEN,CATD
+TEST	OH,CATD
+ACTION	DES,CATD,PRM,82,CR,BOY,PRM,108,GRUN
+
+MATCH	LISTEN,ELF
+TEST	TF,64,00
+ACTION	PRM,133,SF,64,01,EX
+
+MATCH	KILL,ELF
+TEST	CL,40,OC,SWORD
+ACTION	PRM,136,WT,5,DES,SLAMP,MV,01,EX
+
+MATCH	FEED,ELF
+TEST	CL,40,OC,FOOD,TF,64,01
+ACTION	DES,FOOD,DES,ELF,SF,64,02,OK
+
+MATCH	FEED,BOY
+TEST	CL,61,OH,FRUIT,OH,BOY
+ACTION	ATF,13,10,DES,FRUIT,PRM,109,EX
+
+MATCH   ENTER,VIOD
+TEST	CL,34,OH,VIOD
+ACTION	MV,71,SFF,13,10,PRM,84,PRM,52,EX
+
+MATCH	RUB,BELTG
+TEST	OW,BELTG
+ACTION	SFF,13,20,EX
+
+MATCH	READ,MAP
+TEST	OC,MAP
+ACTION	ATF,13,05,PRM,61,PRM,126,EX
+
+MATCH	PULL,PAINTG
+TEST	CL,54,ONC,AXE
+ACTION	PRM,130,EX
+
+MATCH	PULL,PAINTG
+TEST	CL,54,OC,AXE
+ACTION	PRM,50,SFF,13,05,PRM,91,EX
+
+MATCH	PLAY,FLUTE
+TEST	CL,48,OH,FLUTE
+ACTION  PU,OPAL,50,PRM,120,PRM,127,OK
+
+MATCH	RUB,OPAL
+TEST	OC,OPAL
+ACTION	PRM,116,ATF,13,10,PU,STATPS,28,PRM,127,EX
+
+MATCH	RUB,CATD
+TEST	OH,CATD
+ACTION	PU,BRICK,68,PRM,127,OK
+
+MATCH	FEEL,STATPS
+TEST	OH,STATPS
+ACTION	ATF,13,05,PRM,69,PU,MKYSTM,17,EX
+
+MATCH	HELP,ANY
+TEST	TF,53,01
+ACTION	SFF,13,01,PRM,122,EX
+
+MATCH	HELP,ANY
+TEST	RND,20
+ACTION	PRM,113
+
+MATCH	HELP,ANY
+ACTION	PRM,40,EX
+
+MATCH	INVE,ANY
+ACTION	SFF,13,01,INV,EX
+
+MATCH	CREATE,INP
+TEST	OC,EFLAME,CL,01
+ACTION	CR,INP,OK
+
+MATCH	RUB,SAPHIRE
+TEST	OC,SAPHIRE,TF,59,00
+ACTION	PU,DOOR,40,PRM,127,SF,59,01,OK
+
+MATCH	KILL,SPIDER
+TEST	CL,37,OC,SWORD
+ACTION	SFF,13,20,PRM,61,DES,SPIDER,GRUN
+
+MATCH	KILL,ANY
+TEST	OH,INP
+ACTION	PRM,134,PU,INP,67,OK 
+
+MATCH	THROW,SPEAR
+TEST	CL,42,OC,SPEAR
+ACTION	SFF,13,02,DES,SERP,MV,71,CR,DEMON,PRM,87,OK
+
+MATCH	DROP,BOY
+TEST	CL,51,OC,BOY,TF,58,00
+ACTION	PRM,109,ATF,13,10,SF,58,01,OK
+
+MATCH	DROP,ANY
+TEST	CL,71,OWC,INP
+ACTION	DES,INP,WT,10,PRM,76,WT,10,PRM,71,MV,01,GRUN
+
+MATCH	DROP,ANY
+TEST	OWC,INP,NCL,21
+ACTION	DR,INP,CR,INP,PRM,59,OK
+
+MATCH	DROP,ANY
+TEST	CL,21
+ACTION	DR,INP,CR,INP,OK
+
+MATCH	OPEN,CHEST
+TEST	CL,69,OC,MKYSTM
+ACTION	ATF,13,20,PRM,85,MV,66,GRUN
+
+MATCH	OPEN,CHEST
+TEST	CL,69,ONE,MKYSTM
+ACTION	PRM,82,EX
+
+MATCH	RUB,RABB
+TEST	CL,66,OC,RABB
+ACTION	SF,55,01,PRM,81,PRM,75,OK
+
+MATCH	WAVE,RINVIS
+TEST	CL,66,OW,RINVIS,TF,55,01
+ACTION	SF,56,01,SF,09,10,PRM,97,PF,9,PRM,73,EX
+
+MATCH	WAVE,STAFFP
+TEST	CL,66,TF,56,01,OC,STAFFP
+ACTION	SF,57,01,MV,67,GRUN
+
+MATCH	LOOK,AIR
+TEST	CL,67
+ACTION	PRM,88,WT,10,PRM,86,WT,10,PRM,92,SF,70,01,OK
+
+MATCH	GET,AIR
+TEST	CL,67,OH,AIR
+ACTION	PRM,137,ATF,13,50,WT,10,PRM,138,SC,QT
+
+MATCH	LOOK,CRACK
+TEST	CL,63
+ACTION	ATF,13,01,PRM,68,EX
+
+MATCH	TOUCH,CRACK
+TEST	CL,63
+ACTION	ATF,13,01,CR,LEVER,PRM,116,GRUN
+
+MATCH	PULL,LEVER
+TEST	OH,LEVER,OW,BRCSTR
+ACTION	ATF,13,05,MV,65,PRM,89,GRUN
+
+MATCH	LOOK,BW1
+TEST	CL,25,OP,INP
+ACTION	PRM,61,PRM,45,EX
+
+MATCH   READ,BW1
+TEST	CL,25,OP,INP
+ACTION	PRM,62,ATF,13,03,EX
+
+MATCH	READ,BKN2
+TEST	CL,7,TF,17,00
+ACTION	PRM,93,PU,RUINS,56,PU,FOOD,51,PRM,127,EX
+
+MATCH	SCORE,ANY
+TEST	ONE,EFLAME
+ACTION	PRM,50,SC,EX
+
+MATCH	SCORE,ANY
+ACTION	SC,EX
+
+MATCH	LOOK,AROUND
+ACTION	GRUN,OK
+
+MATCH	LOOK,VNSGR
+TEST	CL,22,TF,61,00
+ACTION	SF,61,01,PRM,47,CR,TCKEYS,GRUN
+
+MATCH	WISH,ANY
+TEST	CL,32,OW,RINVIS
+ACTION	PRM,43,SF,65,01,OK
+
+MATCH	WISH,ANY
+TEST	NCL,32
+ACTION	CR,08,PU,08,23,OK
+
+MATCH	BREAK,CUBEP
+TEST	OC,INP
+ACTION	SF,13,00,DES,CUBEP,PRM,50,OK
+
+MATCH	THROW,TRIDEN
+TEST	OC,INP,CL,02
+ACTION	MV,01,GRUN
+
+MATCH	WEAR,GLNHAL
+TEST	OC,INP
+ACTION	WR,INP,OK
+
+MATCH	WEAR,ARMOUR
+TEST	OC,INP
+ACTION	WR,INP,OK
+
+MATCH	WEAR,RTELEP
+TEST	OC,INP
+ACTION	WR,INP,SF,49,01,OK
+
+MATCH	WEAR,RINVIS
+TEST	OC,INP
+ACTION	WR,INP,SF,48,OK
+
+MATCH	WAVE,RINVIS
+TEST	OW,INP
+ACTION	SF,07,200,OK
+
+MATCH	GET,JEWEL
+TEST	CL,01
+ACTION	PRM,67,SF,07,50,OK
+
+MATCH	WAVE,ANY
+TEST	TF,50,00,OC,STAFFP
+ACTION	SF,50,01,DES,CUBEP,OK
+
+MATCH	ASK,JUDGE
+TEST	TF,50,01,OC,STAFFP
+ACTION	PRM,65,EX
+
+MATCH	ZEUS,ANY
+TEST	TF,50,01,OC,STAFFP
+ACTION	PRM,66,SF,50,255,EX
+
+MATCH	LISTEN,ANY
+TEST	CL,29
+ACTION	PRM,64,EX
+
+MATCH	GET,EFLAME
+TEST	OH,EFLAME,CL,12
+ACTION	TKE,EFLAME,SF,07,255,SF,17,00,DES,SLAMP,OK
+
+MATCH   WAVE,RTELEP
+TEST	OW,RTELEP
+ACTION  MV,01,SFF,13,05,GRUN
+
+MATCH	SIT,STOFT
+TEST	OH,STOFT,OW,RINVIS
+ACTION	SFF,13,01,PRM,60,OK
+
+MATCH	SIT,STOFT
+TEST	CL,01,NWC,RINVIS
+ACTION	PRM,50,SFF,13,10,DES,EFLAME,EX
+
+MATCH	RUB,SLAMP
+TEST	OC,SLAMP,TF,17,01
+ACTION	SF,17,00,PRM,128,OK
+
+MATCH	RUB,SLAMP
+TEST	OC,SLAMP,TF,17,00
+ACTION	SF,17,01,PRM,135,OK
+
+MATCH	ASK,ANY
+ACTION	PRM,63,EX
+
+MATCH   QUIT,ANY
+ACTION  QT
+
+MATCH   GET,ANY
+TEST	OH,INP
+ACTION  TKE,INP,OK
+
+MATCH	LOOK,STATUE
+TEST	CL,27
+ACTION	DSCOB,STATUR,EX
+
+MATCH	LOOK,STATUE
+TEST	CL,28,OE,STATPS
+ACTION	DSCOB,STATPS,EX
+
+MATCH	LOOK,STATUE
+TEST	CL,24
+ACTION	DSCOB,STATUH,EX
+
+MATCH	LOOK,ANY
+TEST	OP,INP
+ACTION	DSCOB,INP,EX
+
+MATCH	UNLOCK,DOOR
+TEST	CL,40,ONE,ELF,TF,64,02
+ACTION	PRM,131,ATF,13,10,SF,65,01,SF,64,03,OK
+
+MATCH   LOCK,DOOR
+TEST	CL,40,ONE,ELF,TF,64,03
+ACTION	PRM,132,SF,65,00,OK
+
+MATCH	OPEN,DOOR
+TEST	TF,64,03,CL,40
+ACTION	SF,66,01,ATF,13,20,MV,70,GRUN
+
+MATCHALL
+ACTION PRM,37,EX
+
+ENDTABLE
+MSG /* The positions of these messages must NOT be altered. */
+
+1  '>That means nothing to me{@, I''m afraid}{?.}!%'
+2  ' N'
+3  ' S'
+4  ' E'
+5  ' W'
+6  ' NE'
+7  ' SE'
+8  ' NW'
+9  ' SW'
+10 ' Up'
+11 ' Down'
+12 ' In'
+13 ' Out'
+14 '%Visible exits are '
+15 '>It''s dark, I can''t see anything{? at all}.'
+   ' It is {@very }dangerous to move in the dark.%'
+16 'I am {@presently }carrying '
+17 'I am wearing '
+18 'I can see '
+19 'nothing special'
+20 '>I don''t {@quite }follow you.  Could you try '
+   're-phrasing that...%'
+21 '>I can{@no}{?''}t go {@in that direction.}{?there.}%'
+22 ' right'
+23 ' left'
+24 '>{?Eh? }That doesn''t make sense{@, buddy}!%'
+25 '>{@I''m sorry, but }I can see no such object here.%'
+26 '>PROGRAM ERROR : *** Invalid condition ***%'
+27 'Quitting with '
+28 ' points.%'
+29 'Ok.%'
+30 'Your{@ present} score is '
+31 '>PROGRAM ERROR : *** Unable to find object for action ***%'
+32 '>PROGRAM ERROR : *** Invalid condition ***%'
+33 '>Try again...I''m not sure which object you mean.%'
+34 '>I am not wearing this item.%'
+35 '>That is not amongst the items I am carrying.%'
+36 '>I can''t see the object {@you mean }here...%'
+37 '>{?Huh}{@Eh}?!%'
+38 '>Sorry, I can''t {@possibly }carry anything else.%'
+39 '>{?Sorry, I''m not sure from that what you '
+   'want me to get.}{@You want WHAT?!!} %'
+40 'I can''t help you {?at this time}{@, I''m afraid}.%'
+41 '>Don''t ask silly questions{@, please}!!%'
+42 '>{@I believe I already did that!%}'
+   '{?It is already...%}'
+43 '>Sorry, no chance!%'
+44 '>But this is something I''m already carrying!%'
+45 'Looks {@distinctly }ordinary to me.%'
+46 '{?Sorry, that''s quite impossible.}'
+   '{@I''m sorry, but I can''t do that.}%'
+47 'Keys under the leaves%'
+48 '{@the statue of Hurcules just moved %'
+49 'he woke up instantly as you entered%'
+50 'You have made an error in judgement%'
+51 'why have you disturbed me%'
+52 'foolish servant of the Guardian you dare to step into'
+   'my domain. What {@ object} do you offer for your life'
+   'I seek only strength {@ and power.%' 
+53 'wear this halo in the presence of the greedy at all times%'
+54 'You have been found guilty of numerous offences and shall'
+   ' be stripped of all rank and privleges. Your sentence shall'
+   ' be to wander the Spheres and Chambers of time forever.%'
+55 'which chamber do you wish to Enter > O POWERFUL ONE ???%'
+56 'How can I help you ?%'
+57 'the pestilance is starting to drain your strength%'
+58 'your time, servant of the Guardian is almost up%'
+59 'You have discarded something of value%'
+60 'As you sit down, You see glimpses of lower levels but'
+   ' they vanish quikly%'
+61 'Someone seems to be watching you%'
+62 'judgement is sometimes granted for those in favor%'
+63 'ask in the right place and that might help%'
+64 'take my staff to the chamber of Past Judgements%'
+   '{@ and there ask that the Present Guardianship be revoked%'
+   '{@ say ''wave judgement'' {@and don''t forget to wave the%'
+   ' the staff%'
+65 'on who''s authority do ask ?%'
+66 'Judgement has been rendered. You have now been appointed'
+   'Guardian of Time%'
+67 'Changes {@to the seat of Time }have altered the universal%'
+   'order of the Spheres of Time%'
+68 'Be carefull what you touch {@or take}%'
+69 'as you gaze into the sea, Posidon reveals to you that, '
+   'the Master Keys of Time are in Chamber of the Guardians '
+   'of the Future%'
+70 'you will now be able to enter the Spheres of Time%'
+71 'you do not need to resort to violence, these creatures'
+   'cannot harm you.%'
+72 ' the Dawn of Time%'
+73 ' number of turns%' 
+74 ' a hidden tunnel is exposed before you%'
+75 'even here the Eternal Flame flickers, Hurry !!!%'
+76 'You have entered a time in which there was only fire%'
+77 'These beings cannot see you%'
+78 'here there are mulitudes of people pushing and shoving'
+   ' each other. You get a very strong feeling that in this'
+   ' Time Sphere life cannot be supported very much longer%'
+79 'Time here is frozen. No life forms are moving%'
+80 'do not enter the Sphere of Death, not even a moment%'
+81 'you feel death in the air, be careful.%'
+82 'The Master Keys of Time must be in your possesion%'
+83 'Only the Guardian of the Present may enter %'
+84 'You do not have the POWER to leave this Sphere%'
+85 'Before you are the TREASURES of TIME, be warned%'
+86 'You see only a small cube %'
+87 'As the wall turns, a great gust of air rushes in%'
+88 'As if suspended in mid air%'
+89 'You have entered the Sphere of Time%'
+90 'A very large hole in the floor looms before you%'
+91 'The Guardian has been summond to this Sphere%'
+92 'It is filled with the essence of life, begone.%'
+93 'The tunnel of time spirals beneath you feet.%'
+94 'Many strange objects are here that you can''t'
+   'recognize. %'
+95 'A never ending ocean filled with life surround you%'
+96 ' far below the Sphere '
+97 'You may only remain here for '
+98 'the Sphere of Children%'
+99 ' the Sphere of Battles Past%'
+100 'the Sphere of The Sick%'
+101 'the Sphere of Love%'
+102 'the Sphere of Truth%'
+103 'the Sphere of Blackness%'
+104 'the Sphere of the dove%'
+105 'the Sphere of Hope%'
+106 'You are in '
+107 'a dank chamber '
+108 'small children are allways begging for fruit.%'
+109 'your kindness shall be rewarded%'
+110 'leave this chamber or suffer retribution%'
+111 'never go to '
+112 'Fight or be Killed '
+113 'match your wits against APOLO%'
+114 'have mercy on those not so fortunate as yourself%'
+115 'Drink not from this place AGAIN%'
+116 'master the secrets of this place, and you shall find%'
+    ' what you seek%'
+117 'something very strange around here%'
+118 'sometimes lost people are found down here%'
+119 'why from the look of it your doing all right%'
+120 'there are some very secret passages in some chambers%'
+121 'pull a lever and don''t get lost %'
+122 'You can get,look,throw,break,wave & do many things '
+    'examine & look at everything very carefully '
+    'this is all the help that I can give you right now %'
+123 'maybe you should wave your staff in the right place%'
+124 'it won''t work in all places you know%'
+125 'the fountain only helps the sick%' 
+126 'The map reveals the treasures of time are to the%'
+    'southeast, the traveling shows to be quit difficult%'
+127 'an object has been uncovered somewhere%'
+128 'The ORB comes to life and shines very brightly%'
+129 'You have died of the pestilance in your body%'
+130 'Sorry I haven''t the right tools%'
+131 'door has now been unlocked%'
+132 'locked door%'
+133 'I must guard this door with my life, you cannot enter%'
+134 'It dissapeared as I approched it%'
+135 'The ORB''s light giving qualities are suspended%'
+136 'Your attempts to get rid of me only get me angry'
+    ',you shall pay for this%'
+137 'The balance of Time has tilted in your favour%'
+138 'You have won this adventure in the realms of Time%'
+
+ENDTABLE
+
+UMESS
+
+1 'A statue of Hercules %'
+2 'Key ring %'
+3 'An orb %'
+4 'A Torch%'
+5 'Chair %'
+6 'Master keys of Time %'
+7 'Cube %'
+8 'Gold ring %'
+9 'Diamond ring %'
+10 'Broken shackles%'
+11 'Ancient Scrolls%'
+12 'Large white book%'
+13 'Shepherds cane%'
+14 'Statue %'
+15 'Pitchfork %'
+16 'Halo %'
+17 'Statue %'
+18 'Leather Belt %'
+19 'Jewels'
+20 'Flaming cloud%'
+21 'ZEUS is present'
+22 'green leaves%'
+23 'red saphire%'
+24 'opal%'
+25 'food%'
+26 'mirror%'
+27 'snake%'
+28 'Sea%'
+29 'lever%'
+30 'viod%'
+31 'spider%'
+32 'sword%'
+33 'axe%'
+34 'armour%'
+35 'spear%'
+36 'elf%'
+37 'boy%'
+38 'DEMON%'
+39 'Ruins%'
+40 'rabbits foot%'
+41 'chest%'
+42 'map%'
+43 'fountain%'
+44 'painting%'
+45 'brick%'
+46 'hidden door%'
+47 'bat%'
+48 'fruit%'
+49 'flute%'
+50 'Guardian of Time%'
+51 'cat%'
+52 'crack%'
+53 'locked door%'
+54 'wall%'
+55 '    %'
+
+ENDTABLE
+
+LOC
+
+1  NORMAL,2,N,2,6,NE1,6,4,E,10,7,SE,14,3,S,18,9,SW,22,5,W,26,8,NW,30
+   'You are in the chamber of Time and Space%%This Chamber is '
+   ' filled with changing colours of the rainbow and is pulsing'
+   ' with cosmic rythm. High above you is a cloud of shimmering'
+   ' light. %'
+
+2  NORMAL,2,N,4,3,S,1,5,W,3,4,E,5
+   'You are in an ante chamber with tunnels in all directions'
+
+3  NORMAL,5,W,33,4,E,2
+   'You are in the Presence of PERSEPHONE%'
+
+4  NORMAL,13,EXIT,RTN
+   'You are in the Presence ARES%'
+   'His omnipresence chills you to the bone'
+
+5  NORMAL,5,W,2,4,E,7
+   'You are in the presence of the Goddess POENA%'
+
+6  NORMAL,9,SW,1,2,N,7,3,S,9,4,E,8
+   'You are in an ante chamber with corridors in all directions%'
+
+7  NORMAL,5,W,5,3,S,6,11,D,34
+   'This Chamber is filled with the Knowledge of All things%'
+
+8  NORMAL,5,W,6,3,S,11
+   'The Master of Greed greets you.%'
+
+9  NORMAL,13,EXIT,RTN
+   'This chamber is filled with Kindness%'
+
+10 NORMAL,5,W,1,2,N,11,3,S,13,4,E,12
+   'You are in an ante chamber with corridors in all directions%'   
+
+11 NORMAL,2,N,8,3,S,10
+   'You are in the presence of BELLONA%'
+   'An Evil presence surrounds you%'
+
+12 NORMAL,13,EXIT,RTN
+   'You are in the presence of HYSHAESTUS%'
+   ' the crystal walls dance with the light of the flame%'
+
+13 NORMAL,13,EXIT,RTN
+   'You are in the Chamber of the lord of space.%'
+   'Here you feel that you can go everywhere.%'
+
+14 NORMAL,2,N,15,3,S,17,4,E,16,8,NW,1
+   'You are in an ante chamber with tunnels in all directions%'   
+
+15 NORMAL,13,EXIT,RTN
+   'You are in the Crypt of the Guardians of the Past.%'
+   'You feel the sins of the ages past fall upon you%'
+
+16 NORMAL,13,EXIT,RTN
+   'You are in the presence of the Guardian of the Present%'
+
+17 NORMAL,2,N,14,5,W,19
+   'You are in Chamber of the Guardians of the Future%'
+   'You feel that a thousand eyes are whatching%'
+
+18 NORMAL,2,N,1,3,S,20,4,E,19,5,W,21
+   'You are in an ante chamber that leads in all directions%'
+
+19 NORMAL,4,E,17,5,W,18
+   'You are in the chamber of past judgements%'
+   'the walls are stacked with hundreds of scrolls%'
+
+20 NORMAL,13,EXIT,RTN
+   'You are in a courtroom ,THEMIS is present.%'
+
+21 NORMAL,4,E,18,5,W,23
+   'You are in a room with mirrored walls%'
+
+22 NOEXIT,2,N,25,3,S,23,5,W,24,6,NE1,1
+   'You are in a chamber filled with living plants%'
+   'passage is made difficult creeping vines%'
+
+23 NORMAL,2,N,22,4,E,21,11,D,55
+   'You are in the presence of FORTUNA%'
+
+24 NORMAL,13,EXIT,RTN
+   'You are in the room of strength, the weights of Time%'
+   ' are everywhere.%'
+
+25 NORMAL,8,NW,27,3,S,22
+   'You are in the Library%'
+
+26 NORMAL,2,N,29,3,S,27,4,E,1,5,W,28
+   'You are in the Ante Room of the Gods%'
+   'There are red carpets leading to each door.%'
+
+27 NOEXIT,2,N,26,7,SE,25
+   'You are in a Heavenly Chamber and you can hear the sound%'
+   ' of angels singing%'
+
+28 NOEXIT,13,EXIT,RTN
+   'You stand on the shores of a sunless sea.%'
+
+29 NOEXIT,3,S,26,6,NE1,31
+   'Kneel before Zeus the GOD of the SKY and state thy purpose%'
+
+30 NORMAL,2,N,33,3,S,31,7,SE,1,5,W,32
+   'You are in an ante chamber with corridors in all '
+   ' directions%'   
+ 
+31 NORMAL,9,SW,29,2,N,30
+   'ARTEMIS greets you welcome.%' 	
+   'You are in the Chamber of dreams%'
+
+32 NORMAL,13,EXIT,RTN
+   'You are in the Hall of Wishes. If you ask correctly then'
+   ' your wish may come true%'
+
+33 NORMAL,3,S,30,4,E,3
+   'HERMES bids you welcome.%'
+   'You are in the Hall of Reality%'
+
+34 DARK,3,S,37,5,W,44,10,U,7,11,D,100
+   'You can see a large hole in  the floor%'
+    	
+35 DARK,3,S,62,5,W,37
+   'there are small footprints in the dust%'
+
+36 DARK,2,N,37,3,S,64
+   'the tunnel is very narrow here%'
+
+37 DARK,2,N,34,4,E,35,3,S,36,5,W,38
+   'You have entered the Sphere of Blackness%'
+
+38 DARK,4,E,37,5,W,39
+   'the tunnel is very narrow here%'
+
+39 DARK,2,N,41,4,E,38,3,S,50,5,W,40
+   'You have entered the Sphere of Satin%'
+
+40 DARK,4,E,39
+   'the walls here seem to glow very faintly%'
+
+41 DARK,2,N,43,4,E,44,3,S,39,5,W,42
+   'You have entered the Sphere of Battles Past%'
+
+42 DARK,4,E,41
+   'a small tunnel leads to the west%'
+   'a large Serpent blocks your way%'
+
+43 DARK,3,S,41
+   'something very strange here%'
+
+44 DARK,5,W,41
+   'there is caved in tunnel to the east%'
+
+45 DARK,3,S,46
+   'there is a crack in the west wall of the chamber%'
+
+46 DARK,2,N,45,3,S,47
+   'many people are crowded into this chamber%'
+
+47 DARK,2,N,46,5,W,48,4,E,50,3,S,49
+   'This is the Sphere of Children%'
+
+48 DARK,4,E,47
+   'you have reached the chamber of no return%'
+
+49 DARK,2,N,47,7,SE,53
+   'strange distorted visions are everywhere%'
+
+50 DARK,2,N,39,4,E,64,3,S,51,5,W,47
+   'here you feel the presence of time%'
+
+51 DARK,2,N,50,4,E,61,3,S,57,5,W,52
+   'a sign here say - DO NOT TOUCH%'
+
+52 DARK,2,N,53,4,E,51,3,S,55,5,W,54
+   'You hear strange sounds but they almost sound as if'
+   ' their comming from somewhere else%'
+
+53 DARK,8,NW,49,3,S,52
+   'a sign here says - -> GO NORTH%'
+
+54 DARK,4,E,52
+   'a sign here says - DO NOT TOUCH%'
+
+55 DARK,4,E,56,10,U,23
+   'a cave in to the north blocks a tunnel%' 
+
+56 DARK,4,E,57,5,W,55
+   'strange pillars and markings are everywhere%'
+
+57 DARK,2,N,51,4,E,59,3,S,58
+   'a sign here reads --> SEE the RUINS go west%'
+
+58 DARK,2,N,57
+   'something here doesn''t feel right%'
+
+59 DARK,4,E,60,5,W,57
+   'there are strange markings on the north wall%'
+
+60 DARK,2,N,61,5,W,59
+   'sign here reads --->%'
+
+61 DARK,2,N,63,4,E,62,3,S,60,5,W,51
+   'The Sphere of Truth lies before you%'
+
+62 DARK,2,N,35,5,W,61
+   'small footprints lead north%'
+
+63 DARK,2,N,64,3,S,61
+   'a crack in the west wall lets in a draft%'
+
+64 DARK,2,N,36,5,W,50,3,S,63
+   'here a sign points ---> WEST%'
+
+65 DARK,4,E,63,2,N,66,3,S,59,9,SW,51
+   'many a stranger never leaves this place%'
+
+66 DARK,8,NW,50,2,N,38
+   'strange glow on the east wall%'
+
+67 NORMAL,5,W,66,2,N,68
+   'something is floating here in mid air%'
+
+68 NORMAL,2,N,69,3,S,67
+   'even the walls here are aglow with fire%'
+
+69 NORMAL,3,S,68,2,N,70
+   'sign here says ---> Leave Things Alone - DO NOT TAKE%'
+
+70 DARK,3,S,69,2,N,40
+   'sign here says ---> MINERAL WATER FREE%'
+
+71 DARK,NOEXIT
+   'A valuable gift may set you free%'
+
+ENDTABLE
+
+TABKEY
+N       'N   NORT'
+S       'S   SOUT'
+E       'E   EAST'
+W       'W   WEST'
+NE1     'NE  '
+SE      'SE  '
+NW      'NW  '
+SW      'SW  '
+U       'U   UP  '
+D       'D   DOWN'
+LE      'L   LEFT'
+RI      'R   RIGH'
+IN      'ENTE'
+EXIT    'EXITOUT '
+LOOK    'LOOKEXAM'
+INVE    'INVE'
+QUIT    'QUITEND STOPBYE ABORFUCK'
+GET     'GET TAKE'
+OPEN    'OPEN'
+DROP    'DROP'
+SLAMP   'ORB GLOB'
+ULAMP
+LIFT    'LIFT'
+SCORE   'SCOR'
+AROUND  'AROU'
+SAY     'SAY '
+ASK	'ASK '
+OFF     'OFF UNLI'
+ON      'ON  '
+HELP    'HELP'
+BEGIN   'BEGI'
+CLOSE   'CLOS'
+DOOR    'DOOR'
+READ    'READ'
+THROW   'THRO'
+LOCK    'LOCK'
+UNLOCK  'UNLO'
+JUMP    'JUMP'
+BOARD   'BOAR'
+WHO     'WHO WHENWHATIS  WHERHOW WHY '
+LISTEN  'LISTHEAR'
+NOTE    'NOTE'
+YES     'YES '
+CARE    'CARE'
+STATUE  'STAT'
+FEEL    'FEEL'
+EAT     'EAT TAST'
+WEAR    'WEAR'
+REMOVE  'REMO'
+SHOW    'SHOW'
+STATUH  'HURC'
+EFLAME  'ETERFLAMTORC'
+STOFT   'SEATCHAI'
+CUBEP   'CUBE'
+RTELEP  'GOLDTELE'
+RINVIS  'DIAMINVI'
+BRCSTR  'SHACBRAC'
+BW1     'ANCISCRO'
+BKN2    'WHITBOOK'
+STAFFP  'STAFCANE'
+STATPS  'POSI'
+TRIDEN  'TRIDPITCFORK'
+GLNHAL  'HALO'
+STATUR  'URAN'
+BELTG   'BELTGREE'
+TCKEYS  'KEYS'
+MKYSTM  'MASTKEY '
+SIT     'SIT '
+BREAK   'BREA'
+WAVE    'WAVE'
+BACK	'BACK'
+WISH	'WISH'
+CLOUD   'CLOU'
+JEWEL   'JEWEGEM '
+JUDGE	'JUDG'
+ZEUS	'ZEUS'
+VNSGR   'LEAVVINEPLAN'
+SAPHIRE 'SAPH'
+OPAL    'OPAL'
+FOOD    'FOOD'
+MIRROR  'MIRR'
+SERP    'SERPSNAK'
+SHIP    'SEA '
+LEVER   'LEVE'
+VIOD    'VIOD'
+SPIDER  'SPID'
+SWORD   'SWOR'
+AXE     'AXE '
+ARMOUR  'ARMO'
+SPEAR   'SPEA'
+ELF     'ELF '
+BOY     'BOY KID '
+DEMON   'DEMO'
+RUINS   'RUIN'
+RABB    'RABB'
+CHEST   'CHES'
+MAP     'MAP '
+FOUNT   'FOUN'
+PAINTG  'PAIN'
+BRICK   'BRIC'
+HIDDEN  'HIDDTUNN'
+BAT     'BAT '
+FRUIT   'FRUI'
+FLUTE   'FLUT'
+GUARD   'GUAR'
+CATD    'CAT KITT'
+FIGHT	'FIGH'
+KILL	'KILL'
+PULL	'PULL'
+PUSH	'PUSH'
+DRINK	'DRIN'
+TOUCH	'TOUC'
+FEED	'FEED'
+PLAY	'PLAY'
+ENTER	'ENTE'
+CRACK	'CRAC'
+CREATE  'CREA'
+RUB	'RUB '
+WALL	'WALL'
+AIR	'AIR '
+
+ENDTABLE
+
+TITL1
+
+CHR$(13)
+'%%%'
+'                  The Guardian of Time %%'
+'                   by: H.A.Lautenbach%%'
+'          Written and dedicated to my son Chris%%'
+'    As the Guardian of Time''s Servant you are to ensure that the'
+' that the forces and treasures of Time are contained in a state'
+' of tranquility. Any or all actions will affect Time'
+'  Should they ever be disturbed your eternal Life will be'
+' forfiet and you shall be locked into perpetual limbo.'
+'  You must first rid yourself of the Guardian and claim the'
+' Master Keys of Time. Find all the treasures of Time, without'
+' disturbing the nature of Time itself and then join the Gods.'
+' Bring the treasures to the chamber of Future Judgements for'
+' your just rewards.'
+'  Beware the Spheres of Time can trap a powerless intruder and'
+' he shall be punished and judgement shall be made against him'
+' by the Guardian of Time. Listen well to the Gods for they'
+' could control your destiny.%%'
+' You may command me with the first four letters of each word'
+' the words (and,then,to) can also be used for joining a command'
+' sequence.(mulitple command input on one line)%%'
+' Remember these words servant of the Guardian%%'
+' When you are ready to face your destiny press any key'
+
+ENDTABLE
+
+FLAG
+
+1       01
+2       00
+3       12
+4       00
+5       00
+6       00
+7      255
+8       00
+9       00
+10     255
+11      00
+12      00
+13      00
+14      02
+15      00
+16      81 
+17      01
+18      00
+19      00
+20      02
+21      00
+22      00
+23      01
+24      00
+25      00
+26      00
+27      00
+28      00
+29      00
+30      00
+31      00
+32      00
+33      00
+34      00
+35      00
+36      00
+37      00
+38      00
+39      00
+40      00
+41      00
+42      00
+43      00
+44      00
+45      00
+46      00
+47      00
+48      00
+49	00
+50	00
+51	00
+52	00
+53	00
+54	00
+55	00
+56	00
+57	00
+58	00
+59	00
+60	00
+61	00
+62	00
+63	00
+64	00
+65	00
+66	00
+67	00
+68	00
+69	00
+70	00
+71	00
+72	00
+73	00
+74	00
+75	00
+
+ENDTABLE
+
+ENDGAME
+
