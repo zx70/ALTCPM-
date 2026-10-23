@@ -17,6 +17,9 @@
 ; --------------------------------------------------------
 ;
 	.Z80
+
+	JP RUNB		; This is an appropriate fix, originally missing but       -- Stefano (zx70)
+				; available on other program versions available online
 ;
 ;CONDITION EQUATES	;Must not be changed or re-ordered
 ;
@@ -121,9 +124,10 @@ TE1:	DEFB	00	;Negation flag for text
 TRUE	EQU	-1
 FALSE	EQU	00
 ;
-CLEARS	EQU	26	;Clear Screen for TVI-912 Televideo crt
-HOMEUP	EQU	30	;Home up command for TVI-912
-SYSRET	EQU	0	;Return to CP/M
+; Here you can get a prompt if you substitute HOMEUP with '>'
+CLEARS	EQU	26	;Clear Screen (26 or $1A for TVI-912 Televideo crt)
+HOMEUP	EQU	'>'	;Home up command (30 or $E1 for TVI-912)
+SYSRET	EQU	4200H	;Return to CP/M
 ;
 AGAIN	EQU	252	;DO NOT change. For repeat line.
 RTN	EQU	249	;Special place, returns last location
@@ -1604,4 +1608,4 @@ DMMY1:	DEFB	0
 ;The end. The database file is linked here.
 ;
 	END
-
+
