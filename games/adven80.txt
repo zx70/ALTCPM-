@@ -1,3 +1,41 @@
+
+All the files have been prepared to run on an ALTCPM system, you also
+need an ALTCPM version of M80.COM and L80.COM.
+
+After editing your adventure game (or just use SAMPADV.ADV), run MAKEADV,
+(it is provided in both .BAS and .COM form)..
+
+=============================================================================
+*** MAKEADV - AN ADVENTURE DATABASE CONVERSION UTILITY ***
+
+Enter name of Database file (assumed ext .ADV)? sampadv
+INPUT FILE = sampadv.ADV
+OUTPUT FILE = sampadv.MAC
+
+PROCESSING OBJLOC TABLE
+PROCESSING OBJDES TABLE
+PROCESSING OBPROP TABLE
+PROCESSING OBJDSK TABLE
+PROCESSING MATCHW TABLE
+PROCESSING MSG TABLE
+PROCESSING UMESS TABLE
+PROCESSING LOC TABLE
+PROCESSING TABKEY TABLE
+PROCESSING TITL1 TABLE
+PROCESSING FLAG TABLE
+[EOF] ALL CORRECT
+type SYSTEM to return to CP/M
+=============================================================================
+
+Now we can build the generated module (SAMPADV.MAC) and the core one (ADVEN80.MAC)
+
+   M80 ADVEN80=ADVEN80
+   M80 SAMPADV=SAMPADV
+   L80 ADVEN80,SAMPADV,ADVEN80/n/e
+
+This will provide a fresh adven80.mac
+
+-------------------------------------------
 FILE: ADVEN80.DOC -- notes on the ADVEN80 Adventure Game System Programs
                   -- Bill Soon, Nov. 1981
 
@@ -522,4 +560,4 @@ ENDTABLE
  * END OF DOCUMENTATION *
 
 -----------------------------------------------------------------------
-
+
