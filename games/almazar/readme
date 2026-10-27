@@ -1,2 +1,3 @@
-This games requires a late MBASIC version to run, I think it couldn't exist at the time, unless by modifying it removing the ELSE instructions.
-The right BASIC version is in /programs/languages/mbasic_5.22.cpm
+This games requires a late MBASIC version to run, I think it couldn't exist at the time, unless by modifying it and removing the ELSE instructions.
+
+The right BASIC version (recently ported to ALTCPM) is in /programs/languages/mbasic_5.22.cpm
