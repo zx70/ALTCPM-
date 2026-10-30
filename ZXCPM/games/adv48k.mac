@@ -1,5 +1,5 @@
 
-; ZX Spectrum version
+; ZX Spectrum (non-CP/M target) version
 ; to be built in a ZXCPM environment (ORG at 6100H)
 
 ; * ADVEN-80 *
