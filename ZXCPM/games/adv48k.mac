@@ -1,5 +1,5 @@
 
-; ZX Spectrum (non-CP/M target) version
+; ZX Spectrumm (non-CP/M target) version
 ; to be built in a ZXCPM environment (ORG at 6100H)
 
 ; * ADVEN-80 *
@@ -1334,6 +1334,7 @@ CHROUT:	PUSH IY
   PUSH AF
   CP 26
   JR Z,NOPR
+  CP 96
   JR NZ,NOAP
   LD A,39  ; "'"
 NOAP:
