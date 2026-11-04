@@ -2,3 +2,5 @@ All the programs/tools in this directory should run correctly on ALTCPM 1.4 and 
 Read the source program headers for the usage instructions.
 
 The text manipulation tools MUST be used only on files with a proper EOF termination in order to work properly, the modern command line emulations could work incorrectly on modern text files.
+
+The only known copy of LifeBoat CP/M 1.43 for Heath computers is configured for 32K models (about 19K TPA), some of the listed programs (such as usq.com) behave poorly when it gets short on memory.
