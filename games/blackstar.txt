@@ -1,0 +1,194 @@
+CASTLE BLACKSTAR
+----------------
+
+You must begin by mapping out the forest maze, which only has six
+locations and which can be mapped br dropping objects in each location
+in turn and working out how they all connect together. It's a tedious
+beginning to what turns out to be en excellent adventure that's not
+half as well-known as it ought to be.
+
+In the forest there are three special locations to look out for:
+the clearing to the witch's cottage, the grate over the castle exit
+and the temple where the treasures must be taken. In the cottage
+you'll find the broomstick and the gingerbread. If you hang about for
+too long then the witch will arrive and turn you into a worm, which
+isn't much fun for you and also deprives you of the broomstick and
+gingerbread (well, where would you put them?) Being a worm only lasts
+for a while, although there's always the chance that you might get
+eaten by a bird.
+  
+To open the drawbridge FIRE ARROW from the castle front.
+To climb the portcullis just type CLIMB or UP.
+  
+To take the iron bar out of the furnace, wear the gloves that are
+to be found in the aviary. The bar will cool after about 90 moves, or
+by being dropped in a location which has water in it.
+
+To deal with the eagles guarding the eggs in the aviary you need
+to be carrying the violin and the bow, and then PLAY VIOLIN.
+
+To get the violin you must first TURN WHEEL in the store room,
+which lowers the chandelier in the dining hall. Then take the rope
+from the store room, climb the chandelier, jump to the gallery, and to
+get down again just drop or tie the rope and go down.
+
+The lamp is in the stables in the centre of the courtyard, and
+the oil with which to fill it is at the bottom of the well that's at
+the base of the south tower.
+
+The dungeons in Castle Blackstar have four entrances. One is down
+the well, and that way is blocked by an iron door which can be opened
+with the keys found in the wine cellar. Another way in is by moving
+the bale in the stables and revealing a hole. You can also go down the
+ditch in the north-east corner of the courtyard, or by going through
+the mirrors in the north and south tower rooms: SAY FRIEND and then
+ENTER.
+  
+The gold ring in the north tower cannot be removed via the
+staircase as you will always be killed by the wraiths. You must go
+instead through the mirror and down to the banks of the flaming lake,
+cross the lake in the boat and then up and out through the mirror in
+the south tower.
+
+When you've got the ring you can uear it and make yourself
+invisible to any creature beginning with the letter 'D', as hinted at
+in the rlng's description: dwarves, dragons, dralon sofas...
+
+You must wear the ring in order to get the gold nugget from the
+dwarves working at New Face. If you go there and you're ringless a
+dwarf will take the gold to the duel room and if you enter the duel
+room the gold will be taken back to New Fece. This goes on forever,
+unless you wear the ring to render yourself invisible and enable you
+to sneak up on the dwarves.
+  
+The dynamite is on the island in the middle of the flaming lake
+(pardon my language). It will automatically explode should you try to
+pess through the flames uith it, so to prevent this you must POUR
+LIQUID on it while holding both the bottle and the dynamite. The
+liquid is heat-resistant so the dynamite can be set off by you but
+will not be ignited by the heat from the flames.
+
+To keep the boat afloat while on the lake you must BAIL BOAT at
+every landing. The boat will also enable you to reach the cave which
+contains a source of oil that never runs out, unllke the oil in the
+well which has a limited life.
+
+To get the diamond from the statue, move it to the other end of
+the room then PUSH STATUE, leave the room and press the button uith
+the warning beneath it. This opens the trapdoor and you can then find
+the diamond and the remains of the statue in the tall room beneath the
+trapdoor.
+
+To get the suord out of the stone you must PULL SWORD whilst also
+wearing the crown and the sceptre.
+
+To deal with the invlsible hand which pushes you back down the
+narrow corridor you should render it visible by throwing flour at it.
+
+To get the vase out of the split room you must drop the iron bar
+down the crack in the crevice cave. This falls into the split room and
+uedges the sliding walls. The bar can't be taken through the normal
+entrance to the spllt room as it won't fit.
+
+Before going into the chapel you should get the scroll from the
+dusty study. In the chapel you must immediately enter the pentacle to
+protect you from the Angel of Death. There you should READ SCROLL.
+
+The stairs in the duel room lead up to the dual room, from where
+you can reach the room with the star indentation, the hydra pit and
+the warm pit which leads to the dragon and throne rooms.
+
+To kill the hydra, throw the gingerbread at it. The gingerbread
+is in the witch's cottage near the start of the game. The various
+hydra heads will quarrel over the gingerbread and you can kill the
+remaining head with a weapon of some kind uhen you enter the pit.
+
+The troll on the bridge can be passed in tuo ways, though only
+one helps you get the maximum score. You can get past by giving him
+something of value, which loses you the value of the somethlng, and
+the better solution is to wave the staff from the lake, which turns
+him to stone.
+  
+Beyond the troll you find the star-shaped gem which you must take
+to the star-shaped hole off the dual room and insert it to activate
+the entrance button to the hexagon room.
+
+To get through the M-room you must take a route in the shape of
+the letter M. From the western entrence go N, N, N, N, SE, S, E, N,
+NE, S, S, S, S. Thls takes you to the eastern entrance, and obviously
+reverse the route to go the other uay. If you get it wrong then you
+will be returned to the place you came in, and your lamp wlll end up
+at the other entrance. The room itself is actually made up of a simple
+four-by-four grid of locations. As well as the name itself there's a
+clue to the room and the route if you examine the painting in the
+gallery.
+
+You can use the broomstick to fly with if you take it to the
+clearing or to the top of the south touer and SAY ABRACADABRA. If you
+examine the plaque on the side of the broomstick this gives you a
+clue. You can fly for six moves above some of the features of the
+landscape, such as the clearing, plus two locations that are higher up
+in the air and called 'Between Heaven and Earth' and 'Touching the
+Stars'.
+
+At the top of the south tower is a golden weather vane, and you
+can take this by flying, though you can also get at it by taking
+another route from the secret passage behind the mirror in the south
+tower. Use the command PUSH ROOF to push the low roof and open up
+another route.
+
+You can fly to the 'Touching the Stars' location on the
+broomstick, taking the orb with you, and by saying TOUCH STARS you
+open up a passage to enter Artemis's lair.
+
+When you encounter the dragon don't kill it from the direction
+of the warm pit as its body will then block the way into and out of
+the area where the orb is to be found. Instead you should kill it on
+your way out of the orb area by dropping the vial, to put it to sleep,
+and then killing it with whatever weapon you have with you.
+
+When you INSERT GEM into the star-shaped indentation, pressing
+the star button then takes you to the hexagon room which leads to the
+orb area. To get through the hexagon room, clues are contained within
+the room itself, the route being S, NW, E, SW.
+
+The orb is also in a small maze, and is down the windy passage,
+where the wind will blow out your lamp. To get rid of the wind you
+must have closed the hatch in the ditch in the courtyard, where a sign
+says that it must remain open (uindy). You must open the hatch again
+once you've got the orb, or you lose a point from your score at the
+end of the game. Once you've taken the orb all the castle entrances
+will close except tor the grate.
+
+Underneath the throne, if you PUSH THRONE, is a secret passage
+that leads to the bricked-up wall where you must use the dynamite to
+blow open a route connecting the orb area to the rest of the Castle
+Blackstar dungeons.
+
+If you use the keys to unlock a cell door in the cell block you
+will find a cell in which pulling the torch in its holder opens up a
+secret dooruay down and out of the castle to the grate. This is the
+route you must take once you have got hold of the orb.
+
+Having taken all treasures to the temple in the forest, pray at
+the alter there and you wlll see a vision which gives you a clue to
+the final location of Artemis.
+
+If you WISH when you've dropped a coin down the well you will be
+taken automatically to the temple location.
+
+Once you've got the orb and have put all the treasures in the
+temple, in order to complete the game you must then fly to the
+'Touchlng the Stars' location, say TOUCH STARS, enter the passage and
+pass through the small punctuation maze, SAY FRIEND to open the lift,
+switch the lift on with the button in the electrical room, then after
+the lift has gone up SAY FRIEND again, to open the doors. You then meet
+Artemis and the game finishes.
+
+The maximum score of 250 points is a combination of finding
+treasures, depositing them at the temple, performing various actions
+throughout the game (some of which aren't essential so you can finish 
+with a lower score) and returning the orb to Artemis.
+
+Typed by Ian (phian@btinternet.com) solved by Mike Gerrard.
+
