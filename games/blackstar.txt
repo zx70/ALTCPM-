@@ -1,3 +1,17 @@
+Castle Blackstar - SCRAD1(V9.9) JUL 84
+Backported to CP/M from the ZX Spectrum version
+
+To save the current game progress, first quit the game.
+Then type:
+
+  A> SAVE 136 GAME.COM
+
+
+
+SPOILER ALERT ---- Game solution follows
+
+*****************************************************
+
 CASTLE BLACKSTAR
 ----------------
 
@@ -191,4 +205,8 @@ throughout the game (some of which aren't essential so you can finish
 with a lower score) and returning the orb to Artemis.
 
 Typed by Ian (phian@btinternet.com) solved by Mike Gerrard.
+
+*****************************************************
+Displayed on the Classic Adventures Solution Archive:
+http://hjem.get2net.dk/gunn/
 
