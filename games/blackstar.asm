@@ -1,13 +1,19 @@
 
-; To save the game in CP/M, first quit the game.
+; To save the game in CP/M without using -DCPMSAVE, first quit the game.
 ; Then type:
 ; A> SAVE 136 GAME.COM
+;
+; ..it will also work when CPMSAVE is available, to save a copy of the
+; Castle Blackstar game in the current progress status.
 
 ; TRS-80 Model I ALT-CP/M 1.4:
 ; z88dk-z80asm.exe -b -DALTCPM -DNO_ECHO -oBLACKS.COM blackstar.asm
 
 ; Standard CP/M
 ; z88dk-z80asm.exe -b -DNO_ECHO -DNEED_CRLF -oBLACKS.COM blackstar.asm
+
+; Locomotive CP/M on ZX Spectrum +2
+; z88dk-z80asm.exe -b -DNO_ECHO -DNEED_CRLF -DCPMSAVE -oBLACKS.COM -DCOLUMNS=52 blackstar.asm
 
 ; ZX Spectrum 48K
 ; z88dk-z80asm.exe -b -DSPECTRUM blackstar.asm
@@ -30,7 +36,12 @@ ELSE
   ORG $0100
   DEFC WBOOT  = $0000
   DEFC BDOS   = $0005
-  DEFC LINLEN = 79
+  IF COLUMNS
+    DEFC LINLEN = COLUMNS-1
+  ELSE
+    DEFC LINLEN = 79
+    ;DEFC LINLEN = 51   ; Locomotive CP/M on ZX Spectrum +3
+  ENDIF
   DEFC CONS_ROWS = 24
  ENDIF
 ENDIF
@@ -52,8 +63,8 @@ XNCO:
   DEFB $00                ; 1st Optional Message
 XBEFA:
   DEFB $00                ; 2nd Optional Message
-LSTOBJ:
   DEFB $01                ; Byte reserved for latest object name
+LSTOBJ:
   DEFB $00
 BUFFER:
   DEFB $00,$00,$00,$00,$00,$00,$00,$00 ; 60 byte line buffer
@@ -118,6 +129,19 @@ GAME_SIZE:
 ; Data block at 7097
 CURRENT_GAME:
   DEFW $0000
+
+
+IF CPMSAVE
+fcb:				; fcb
+	defb	0		; disk+1
+	defm	"BLACKS  SAV"   ; file name
+	defb	0		; EX=0
+	defb	0,0		; S1,S2
+	defb	0		; RC=0
+	defb	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0	; D0,...D15
+fcbcr:	defb	0		; CR=0
+	defb	0,0,0		; R0,R1,R2
+ENDIF
 
 ;
 ; MAIN game interpreter entry
@@ -190,25 +214,29 @@ ENDIF
   XOR A
   LD (L708A),A
 
+
+;Main program loop. Start by printing location description.
+
 RUN:
-  CALL DESCR
-AFTDK:
-  CALL STABLE
-  CALL IBTCH
-  JR Z,GTENTR
-  CALL BEFA
+  CALL DESCR          ;Describe location & 'can see...'
+AFTDK:                
+  CALL STABLE         ;Set up flags
+  CALL IBTCH          ;check if we are batching
+  JR Z,GTENTR         
+  CALL BEFA           ;2nd optional message
 GTENTR:
-  CALL ENTRI
-  LD A,R
+  CALL ENTRI          ;Get user input
+  LD A,R              ;Set up random number
   LD (RANSEED2),A
+
 SRTOUT:
-  LD IX,(FLAG)
-  LD HL,CODBUF+1
+  LD IX,(FLAG)        ;Point to flags
+  LD HL,CODBUF+1      ;Look @ 2nd word in code buffer
   LD A,(HL)
-  CP $FB
+  CP 251              ;Look for the code for 'IT'
   JR NZ,QWOP
-  LD A,(BUFFER-1)
-  OR A
+  LD A,(LSTOBJ)       ;If found, get last object
+  OR A                ;Test Acc.
   JP Z,L71DB
   LD (HL),A
   JR L7135
@@ -219,53 +247,60 @@ QWOP:
   JR NC,L7135
   CP $80
   JR C,L7135
-  LD (BUFFER-1),A
+  LD (LSTOBJ),A
 L7135:
   LD HL,CODBUF
   LD A,(HL)
   CP $0D
   JR NC,XMATCH_0
-  LD DE,(WAYOUT)
+  LD DE,(WAYOUT)      ;Point to available exits
 MOREDI:
-  LD A,(DE)
+  LD A,(DE)           ;Compare with available exits
   CP $FF
-  JR Z,XMATCH_0
+  JR Z,XMATCH_0       ;Found a direction to go ???
   LD A,(DE)
   INC DE
   CP (HL)
   JR Z,DFND
-  INC DE
-  JR MOREDI
+  INC DE              ;Skip description of direction
+  JR MOREDI           ;Look for another exit
 DFND:
   LD A,(DE)
-  CP $F9
+  CP $F9              ;(RTN) Is this a return
   JR NZ,BASL
-  LD A,(IX+$14)
+  LD A,(IX+$14)       ;If so, retrieve old location
 BASL:
   PUSH AF
-  LD A,(IX+$0E)
-  LD (IX+$14),A
+  LD A,(IX+$0E)       ;If so, retrieve old location
+  LD (IX+$14),A       ;Put new location in FLAG table
   POP AF
-  LD (IX+$0E),A
+  LD (IX+$0E),A       ;Do a swap...
   LD (HL),$0D
   JP XMATCH_0
+
+;
+;Look to see if we are in the middle of a batch of commands
+;and if so, set Zero flag else reset it.
+;
 IBTCH:
   PUSH HL
-  LD HL,CODBUF
+  LD HL,CODBUF        ;point to start of buffer
 IBTPL:
   LD A,(HL)
-  OR A
+  OR A                ;if you hit end, then no batch
   JR Z,NBTCH
-  CP $FA                  ; THEN EQU 250  ; Don't alter this. Duplicate in
-  JR Z,ZBTCH              ; database.
+  CP 250              ; (THEN) Don't alter this. Duplicate in database
+  JR Z,ZBTCH          ;if find THEN, is batch line
   INC HL
   JR IBTPL
 ZBTCH:
-  LD A,$FF
+  LD A,$FF            ;Set or Reset Zero flag as necessary
 NBTCH:
   INC A
-  POP HL
+  POP HL              ;Restore HL
   RET
+
+
 XMATCH_0:
   LD IX,CODBUF
   LD A,(L798A)
@@ -273,23 +308,31 @@ XMATCH_0:
   JR NZ,L718A
   LD IY,(TAB1)
   JR XMATCH
+
 L718A:
   LD IY,(MSG)
   XOR A
   LD (L798A),A
   JR ENCHK_1
+
+;
+; XMATCH
+;This section looks at CODBUF to see if any sense can be made
+;of the codes. (This is AFTER direction checks have been made.)
+;If no sense then a request for rephraseing is made else action is taken.
+;
 XMATCH:
-  EXX
-  LD HL,(OBPROP)
+  EXX                 ;treatment, checking for
+  LD HL,(OBPROP)      ;legality in the case of an object. (Check OBPROP)
 FLNA:
   INC HL
   LD A,(HL)
-  OR A
+  OR A                ;not a special object ???
   JP Z,ENCHK
   CP (IX+$01)
-  JP Z,FNBYTE       ; got as match
+  JP Z,FNBYTE         ; got as match
 FLNB:
-  INC HL            ; otherwise skip to next
+  INC HL              ; otherwise skip to next
   LD A,(HL)
   OR A
   JP NZ,FLNB
@@ -299,21 +342,21 @@ FNBYTE:
   LD A,(HL)
   OR A
   JP Z,ILEGL
-  CP (IX+$00)       ; check is legal
+  CP (IX+$00)         ; check is legal
   JP Z,ENCHK
   JP FNBYTE
 ILEGL:
   EXX
   LD HL,(_MSG)
-  LD B,46           ; otherwise may not.
+  LD B,46             ; otherwise may not.
   JP HOPM
 
 ENCHK:
   EXX
 ENCHK_1:
-  LD A,(IX+$01)     ;Save this byte
+  LD A,(IX+$01)       ;Save this byte
   LD (SAVIX),A
-  LD DE,$0000       ;Reset pointers
+  LD DE,$0000         ;Reset pointers
 NEXTK:
   LD A,(SAVIX)
   LD (IX+$01),A
@@ -336,18 +379,24 @@ HOPM:
 HOMU:
   JP AFTDK
 
+;
+;First, check input pair. If either is 255 then this is treated
+;as WILDCARD & passed. It is necessary for certain CONDITION/
+;ACTION sets that must be run after EVERY input.
+;
 NOTENDM:
   LD A,(IY+$00)
-  CP $FF
+  CP $FF             ;check 1st char.
   JR Z,CHSND
   CP (IX+$00)
   JR NZ,L720E
 CHSND:
   LD A,(IY+$01)
-  CP $FF
-  JR Z,FAILTHS
+  CP $FF             ;another WILDCARD???
+  JR Z,SKP1
   CP (IX+$01)
-  JR Z,FAILTHS
+  JR Z,SKP1
+
 L720E:
   INC IY
   LD A,(IY+$01)
@@ -356,6 +405,7 @@ L720E:
   INC IY
   INC IY
   JR NOTENDM
+
 L721D:
   INC IY
   LD A,(IY+$00)
@@ -363,36 +413,50 @@ L721D:
   JR NZ,L721D
   INC IY
   JP NEXTK
-SKP1:
-  INC IY
-SKP1A:
-  LD A,(IY+$00)
-  CP $FE
-  JR C,SKP1
-  JR Z,FAILOOP
-  INC IY
-  JP NEXTK
+
+;
+;This section sets the IY pointer to the start of a new set of
+;conditions/actions
+;
 FAILTHS:
   INC IY
-FAILOOP:
+FAILTHSA:
+  LD A,(IY+$00)
+  CP $FE
+  JR C,FAILTHS
+  JR Z,SKP11
+  INC IY
+  JP NEXTK
+
+;
+;This section looks at conditions in current list & determines
+;whether or not these are all valid.
+;
+SKP1:
+  INC IY
+SKP11:
   INC IY
 FAILLX:
   LD A,(IY+$00)
   CP $FD
   JP Z,ACTONIT
   CP $FE
-  JR NZ,L724F
+  JR NZ,ISC2
   INC IY
-  JR FAILTHS
-L724F:
+  JR SKP1
+
+;
+;First of the conditions as outlined in the EQUATES section
+;
+ISC2:
   CP $16
-  JR NZ,L725D
+  JR NZ,ISC3         ;simple comparisons
   LD A,(IY+$01)
   CP (IX+$01)
 HOPZ:
-  JR Z,FAILTHS
-  JR SKP1
-L725D:
+  JR Z,SKP1
+  JR FAILTHS
+ISC3:
   CP $17
   JR NZ,L7269
   LD A,(IY+$01)
@@ -404,8 +468,8 @@ L7269:
   LD A,(IY+$01)
   CP (IX+$01)
 HOPNZ:
-  JR NZ,FAILTHS
-  JR SKP1
+  JR NZ,SKP1
+  JR FAILTHS
 ISNC3:
   CP $19
   JR NZ,L7283
@@ -418,8 +482,8 @@ L7283:
   LD A,(IX+$00)
 L728A:
   CP (IY+$01)
-  JR NC,FAILTHS
-  JR SKP1
+  JR NC,SKP1
+  JR FAILTHS
 L7291:
   CP $1E
   JR NZ,L729A
@@ -431,8 +495,8 @@ L729A:
   LD A,(IX+$00)
 L72A1:
   CP (IY+$01)
-  JR C,FAILTHS
-  JP SKP1
+  JR C,SKP1
+  JP FAILTHS
 L72A9:
   CP $1F
   JR NZ,ISCL
@@ -466,7 +530,7 @@ L72D3:
 L72E0:
   LD A,(IY+$00)
   CP $FD
-  JP NC,SKP1A
+  JP NC,FAILTHSA
   INC IY
   JR L72E0
 L72EC:
@@ -476,7 +540,7 @@ L72EC:
 L72F3:
   LD A,(IY+$01)
   CP $FD
-  JP NC,SKP1
+  JP NC,FAILTHS
   INC IY
   CP (HL)
   JR NZ,L72F3
@@ -515,10 +579,10 @@ L7334:
   LD HL,(FL14)
   LD A,(HL)
   CP D
-  JP Z,FAILTHS
+  JP Z,SKP1
   LD A,$FE
   CP D
-  JP Z,FAILTHS
+  JP Z,SKP1
   LD A,$FD
 HOPZ1:
   CP D
@@ -544,7 +608,7 @@ ISOWC:
   JR NZ,ISONP
   LD A,$FE
   CP D
-  JP Z,FAILTHS
+  JP Z,SKP1
   DEC A
 L7375:
   JR HOPZ1
@@ -554,10 +618,10 @@ ISONP:
   LD HL,(FL14)
   LD A,(HL)
   CP D
-  JP Z,SKP1
+  JP Z,FAILTHS
   LD A,$FE
   CP D
-  JP Z,SKP1
+  JP Z,FAILTHS
   LD A,$FD
 HOPNZ1:
   CP D
@@ -577,7 +641,7 @@ ISNWC:
   JR NZ,ISONH
   LD A,$FE
   CP D
-  JP Z,SKP1
+  JP Z,FAILTHS
   DEC A
   JR HOPNZ1
 ISONH:
@@ -614,8 +678,8 @@ ISRND:
 RANDOM:
   CALL RANM
   CP (IY+$01)
-  JP C,FAILTHS
-  JP SKP1
+  JP C,SKP1
+  JP FAILTHS
 ISTF:
   PUSH DE
   LD HL,(FLAG)
@@ -642,22 +706,22 @@ ISLT:
   LD A,(HL)
   CP (IY+$02)
   INC IY
-  JP Z,FAILTHS
-  JP NC,FAILTHS
-  JP SKP1
+  JP Z,SKP1
+  JP NC,SKP1
+  JP FAILTHS
 ISGE:
   CP $15
   JR NZ,DANGER
   LD A,(HL)
   CP (IY+$02)
   INC IY
-  JP C,FAILTHS
-  JP SKP1
+  JP C,SKP1
+  JP FAILTHS
 DANGER:
   LD HL,(_MSG)
   LD B,$1A
   CALL MFETCH
-  JP SKP1
+  JP FAILTHS
 ACTONIT:
   INC IY
   LD A,(IY+$00)
@@ -712,6 +776,101 @@ L7498:
   ADD HL,DE
   JR L748B
 L749B:
+
+IF CPMSAVE
+  CP $83
+  JR NZ,L74BF
+  CALL ASK_CONFIRM
+  JP NZ,RUN
+
+	ld	de,fcb		; delete file (if any...)
+	ld	c,19
+	call	BDOS
+
+	ld	de,fcb		; make file
+	ld	c,22
+	call	BDOS
+	inc	a
+	jp	z,ACTONIT
+
+	xor	a		; prepare fcb
+	ld	(fcbcr),a
+
+	ld	de,LIVE_GAME	; set DMA addr
+	ld	c,26
+	call	BDOS
+
+	ld	de,fcb		; write record		
+	ld	c,21
+	call	BDOS
+
+	ld	de,LIVE_GAME+128	; set DMA addr
+	ld	c,26
+	call	BDOS
+
+	ld	de,fcb		; write record		
+	ld	c,21
+	call	BDOS
+
+	ld	de,LIVE_GAME+256	; set DMA addr
+	ld	c,26
+	call	BDOS
+
+	ld	de,fcb		; write record		
+	ld	c,21
+	call	BDOS
+
+	ld	de,fcb		; close file
+	ld	c,16
+	call	BDOS
+
+  JP ACTONIT
+
+L74BF:
+  CP $89
+  JR NZ,L74D5
+  CALL ASK_CONFIRM
+  JP NZ,RUN
+
+	ld	de,fcb		; open file
+	ld	c,15
+	call	BDOS
+	inc	a
+	JP	z,RUN
+
+	xor	a		; prepare fcb
+	ld	(fcbcr),a
+
+	ld	de,LIVE_GAME	; set DMA addr
+	ld	c,26
+	call	BDOS
+
+	ld	de,fcb		; read record		
+	ld	c,20
+	call	BDOS
+
+	ld	de,LIVE_GAME+128	; set DMA addr
+	ld	c,26
+	call	BDOS
+
+	ld	de,fcb		; read record		
+	ld	c,20
+	call	BDOS
+
+	ld	de,LIVE_GAME+256	; set DMA addr
+	ld	c,26
+	call	BDOS
+
+	ld	de,fcb		; read record		
+	ld	c,20
+	call	BDOS
+
+	ld	de,fcb		; close file
+	ld	c,16
+	call	BDOS
+
+  JP RUN
+ENDIF
 
 IF SPECTRUM
   CP $83
@@ -1062,7 +1221,7 @@ L7701:
 NODSC:
   DEC HL
   LD A,(HL)
-  LD (LSTOBJ),A
+  LD (XBEFA+1),A
   LD B,$04
   LD HL,(_MSG)
 L7715:
@@ -1073,7 +1232,7 @@ LB45:
   JR NZ,L7729
   INC HL
   LD A,(HL)
-  LD (LSTOBJ),A
+  LD (XBEFA+1),A
   INC IY
   JP L7632
 L7729:
@@ -1456,13 +1615,26 @@ ENT1:
   CALL CHRIN
   CP $0D
   JR Z,ENDIN
+IF SPECTRUM
   CP $0C
   JR Z,BACKS
   CP $30
   JR Z,BACKS
+ELSE
+  CP $7F		;backspace?
+  JR Z,BACKS
+  CP $5F		;both types
+  JR Z,BACKS
+  CP 8          ; BS
+  JR Z,BACKS
+ENDIF
   CP $31
   JR Z,ENT_AGAIN
-  CP $07                  ; CTL-U (CAPS-SHIFT+1 on ZX Spectrum) = scrap line
+IF SPECTRUM
+  CP $07                 ; CTL-U (CAPS-SHIFT+1 on ZX Spectrum) = scrap line
+ELSE
+  CP 21                  ; CTL-U
+ENDIF
   JR NZ,CONVUP
 ENT_AGAIN:
   LD A,$2A
@@ -1493,16 +1665,20 @@ BACKS:
   JR C,BACKS_0
   LD B,A
   DEC HL
+IF !NO_ECHO
   LD A,$20
   CALL CHROUT
   LD A,$08
   CALL CHROUT
   LD A,$08
   CALL CHROUT
+ENDIF
   JR ENT1
 BACKS_0:
+IF !NO_ECHO
   LD A,$20
   CALL CHROUT
+ENDIF
   JP L798B
 ENDIN:
   LD (HL),$00             ; CR pressed, end of input phase
@@ -1773,14 +1949,46 @@ CHRIN:
   PUSH HL
   PUSH IX
   PUSH DE
+IF USE_BIOS
+
+.wkey
+	call const
+	and  a
+	jr   z,wkey
+
+.empty_buffer
+	call conin
+	ld   e,a
+	push de
+	call const
+	pop  de
+	and  a
+	jr   nz,empty_buffer
+	
+	ld   a,e
+
+ELSE
 	LD	C,1
 	CALL	BDOS		;CP/M I/O
+ENDIF
   POP DE
   POP IX
   POP HL
   POP BC
   POP IY
   RET
+ENDIF
+
+IF USE_BIOS
+.conin
+	ld   de,6
+	jr   console
+.const
+	ld   de,3
+.console
+	ld   hl,(WBOOT+1)	; (BIOS)
+	add  hl,de
+	jp   (hl)
 ENDIF
 
 IF SPECTRUM
@@ -1908,32 +2116,35 @@ CHROUT:
 ENDIF
 
 
-
+;
+; STABLE : This routine sets up the flags per the written
+;		specifications.
+;
 STABLE:
-  LD IX,(FLAG)
-  INC (IX+$04)
+  LD IX,(FLAG)         ;point to flag table.
+  INC (IX+$04)         ;These three are easy.
   INC (IX+$05)
   LD A,$64
   CP (IX+$05)
-  JR NZ,L7C49
+  JR NZ,STABLE_0
   LD (IX+$05),$00
   INC (IX+$06)
-L7C49:
+STABLE_0:
   LD HL,(FL06)
   LD B,$03
-L7C4E:
+STAB1:
   INC HL
   LD A,(HL)
   OR A
-  JR Z,L7C54
+  JR Z,STAB2
   DEC (HL)
-L7C54:
-  DJNZ L7C4E
+STAB2:
+  DJNZ STAB1
   LD A,(IX+$11)
   DEC A
   AND (IX+$0A)
   OR (IX+$01)
-  LD (IX+$10),A
+  LD (IX+$10),A        ;Save real light/dark.
   LD A,(IX+$11)
   OR A
   JR NZ,STAB5
@@ -1951,7 +2162,7 @@ STAB5:
   LD B,(IX+$00)
   LD IX,(FL17)
 STAB51:
-  LD (IX+$02),$00
+  LD (IX+$02),$00      ;find out how many objects are
   LD HL,(GAME_BASE)
   INC HL
   LD DE,$0005
@@ -1964,35 +2175,48 @@ STAB5A:
   JR NZ,STAB5A
   INC (IX+$02)
   JR STAB5A
+
 STAB6:
   LD IX,(FLAG)
   RET
+
+; MFETCH: This routine selects and prints a message. HL must
+;	point to the table, and B reg. contains a number
+;	1 to 255. The message is selected and printed. 0 is
+;	the delimiter and '%' will echo as a CRLF sequence.
+;	'>' acts to terminate batches but will not print.
+;	ALSO HANDLES DESCRIPTIONS, STORING DIRECTION DATA.
+;
+; MPRINT: This may be used as a separate routine. HL points
+;	to first byte. Delimiters as above.
+;
 MFETCH:
-  PUSH HL
+  PUSH HL           ;save registers
   PUSH AF
-  LD A,$00
+  LD A,$00          ;load Acc. with terminator
 LOOPF:
-  PUSH BC
-  LD BC,$0000
-  CPIR
-  POP BC
-  DJNZ LOOPF
+  PUSH BC           ;Save the count
+  LD BC,$0000       ;up to 64K!
+  CPIR              ;look for zeros..FAST
+  POP BC            ;get count back
+  DJNZ LOOPF        ;Again?
   LD A,$FF
   LD (L708B),A
   LD A,(HL)
-  CP $FC
-  JR C,MPRX
-  CP $FE
-  JR NC,MPML
+  CP $FC            ;Is this location description?
+  JR C,MPRX         ;4 different varieties.
+  CP $FE            ;255=normal, 254=no directions
+  JR NC,MPML        ;253=dark
+  INC A             ;252=dark & no directions ever.
   INC A
-  INC A
-  LD (IX+$01),$00
+  LD (IX+$01),$00   ;Save either dark...
   JR MPM
+
 MPML:
-  LD (IX+$01),$01
+  LD (IX+$01),$01   ;or light status.
 MPM:
-  LD (IX+$0F),A
-  INC HL
+  LD (IX+$0F),A     ;Store SEE/NOT SEE directions
+  INC HL            ;in flag table + 15.
   LD (WAYOUT),HL
 BRPX:
   LD A,(HL)
@@ -2000,6 +2224,7 @@ BRPX:
   INC HL
   JR Z,BLTX
   JR BRPX
+
 BLTX:
   LD (L7087),HL
   LD A,(IX+$11)
@@ -2055,7 +2280,7 @@ L7D22:                   ;
   CP $5D                 ; 
   JR NZ,L7D32            ; 
   XOR A                  ; 
-  JP L7DE5               ; 
+  JP MPREND_0            ; 
 L7D32:                   ; 
   CP $5B                 ; 
   JR NZ,L7D3B            ; 
@@ -2087,7 +2312,7 @@ LB54:
   PUSH HL                 ;
   LD HL,(EXPAND_PTR)      ;
   PUSH HL                 ;
-  LD A,(LSTOBJ)           ;
+  LD A,(XBEFA+1)           ;
   LD HL,(UMESS)           ;
   LD B,A                  ;
   CALL MFETCH             ;
@@ -2129,6 +2354,7 @@ L7D9B:                    ;
   LD C,$FF
   CALL DECOMP_GETCHR
   JR FRTHR1
+
 FRTHR:
   LD C,$00
 FRTHR1:
@@ -2146,6 +2372,7 @@ FRTHR1:
   OR A
   JR NZ,L7DCE
   JR L7DC9
+
 L7DC5:
   LD A,(HL)
   OR A
@@ -2154,6 +2381,7 @@ L7DC9:
   POP HL
   INC HL
   JP MPRX_1
+
 L7DCE:
   POP HL
   CALL L7DEB
@@ -2164,15 +2392,18 @@ LB55:
 L7DDA:
   CALL L7BC1
   JP MPRX_1
+
 MPREND:
   CALL CRLF
-  JR L7DE8
-L7DE5:
+  JR MPREND_1
+
+MPREND_0:
   CALL L7BC1
-L7DE8:
+
+MPREND_1:
   POP AF
-  POP HL
-  RET
+  POP HL             ;restore registers
+  RET                ;and return.
 
 L7DEB:
   LD B,$01
@@ -2194,55 +2425,63 @@ L7DFD:
 L7E01:
   DJNZ L7DED
   RET
+
+
 ICANC_2:
   EXX
   PUSH IX
   LD IX,(FLAG)
   LD A,(IX+$10)
   OR A
-  JR NZ,ICANQ
-  LD B,$0F
+  JR NZ,ICANQ_2
+  LD B,$0F          ;send dark message
   LD HL,(_MSG)
   CALL RND_MFETCH
   JR ICAN3
-ICANQ:
+
+ICANQ_2:
   LD HL,(OBJLOC)
 L7E1E:
-  LD C,(IX+$0E)
+  LD C,(IX+$0E)     ; load present location
   CALL L7EBC
   JR Z,ICAN3
   INC HL
   LD A,(HL)
   DEC HL
-  LD (LSTOBJ),A
+  LD (XBEFA+1),A
   LD B,$12
   PUSH HL
   LD HL,(_MSG)
   CALL RND_MFETCH
   POP HL
   JR L7E1E
+
 ICAN3:
   POP IX
   EXX
   RET
+
+
 ICANC:
   EXX
   PUSH IX
   LD IX,(FLAG)
   LD A,(IX+$10)
   OR A
-  JR NZ,L7E53
-  LD B,$0F
+  JR NZ,ICANQ
+  LD B,$0F                ;send dark message
   LD HL,(_MSG)
   CALL RND_MFETCH
   JR L7EB2
-L7E53:
+
+ICANQ:
   LD HL,(OBJLOC)
   LD C,$FE
   CALL L7EBC
   JR Z,L7E7A
   LD B,$10
   JR L7E6A
+
 L7E61:
   LD C,$FE
   CALL L7EBC
@@ -2252,7 +2491,7 @@ L7E6A:
   INC HL
   LD A,(HL)
   DEC HL
-  LD (LSTOBJ),A
+  LD (XBEFA+1),A
   PUSH HL
   LD HL,(_MSG)
   CALL RND_MFETCH
@@ -2278,7 +2517,7 @@ L7E95:
   INC HL
   LD A,(HL)
   DEC HL
-  LD (LSTOBJ),A
+  LD (XBEFA+1),A
   PUSH HL
   LD HL,(_MSG)
   CALL RND_MFETCH
