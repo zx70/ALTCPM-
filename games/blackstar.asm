@@ -1236,8 +1236,8 @@ LB45:
   INC IY
   JP L7632
 L7729:
-  CP $0A
-  JR NZ,AGET
+  CP $0A            ; (SWP)
+  JR NZ,AGET        ;swap twin-state objects
   LD DE,$0005
   LD B,(HL)
   ADD HL,DE
@@ -1249,15 +1249,14 @@ L7729:
   JP HOPC
 AGET:
   CP $02
-  JR NZ,AWR
-  CALL TOOMNY
-  LD (HL),$FE
-L7744:
+  JR NZ,AWR         ;want to take an object?
+  CALL TOOMNY      	;test to see if we are carrying
+  LD (HL),$FE       ;too much perhaps.
   JR L774F
 AWR:
-  CP $03
-  JR NZ,ADR
-  CALL TOOMNY
+  CP $03            ;(WR)
+  JR NZ,ADR         ;wear an item, maybe..
+  CALL TOOMNY       ;Check again
   LD (HL),$FD
 L774F:
   INC HL
@@ -1284,8 +1283,8 @@ L7769:
 BRTSB:
   JP HOPC
 ADR:
-  CP $04
-  JR NZ,APU
+  CP $04             ; (DR)
+  JR NZ,APU          ;drop something - that's easy
 ADR1:
   PUSH IX
   LD IX,(FLAG)
@@ -1304,15 +1303,15 @@ L778B:
   POP IX
   JR BRTSB
 APU:
-  CP $12
-  JR NZ,ACR
+  CP $12              ; (PU)
+  JR NZ,ACR           ;transfer an item to a new loc.
   LD A,(IY+$02)
   LD (HL),A
   INC IY
   JR BRTSB
 ACR:
-  CP $13
-  JR Z,ADR1
+  CP $13              ; (CR)
+  JR Z,ADR1           ;create something, even.
   CP $14
   JR NZ,L77A7
   LD (HL),$FF
@@ -1341,9 +1340,13 @@ L77B8:
   NEG
   JR L77B0
 DANGA:
-  LD HL,(_MSG)
+  LD HL,(_MSG)        ;problems - print error msg.
   LD B,$20
   JP HOPM
+
+;Check here to see if we are carrying more items than entry in
+;the flag table.
+;
 TOOMNY:
   PUSH IX
   LD IX,(FLAG)
@@ -1358,17 +1361,24 @@ TOOMNY:
   POP IX
   DEC IY
   JP HOMU
+
 L77EF:
   LD A,(IX+$0B)
   CP (IX+$0E)
   POP IX
   RET
+
+;Optional messages. If either is required, will be printed once
+;only. If required again, may be set again using SMA and SMB
+;commands in the action table.
+;
 ONCO:
-  LD A,(XNCO)
+  LD A,(XNCO)         ;load with last entry
   LD B,A
   XOR A
   LD (XNCO),A
   JP BEFAD
+
 BEFA:
   LD A,(XBEFA)
   LD B,A
@@ -1380,24 +1390,27 @@ BEFAD:
   RET Z
   LD HL,(UMESS)
   JP MFETCH
+
+;This routine prints out a decimal number pointed to by IX. The
+;range is 0-255. This could probably be made a lot shorter.
 PNUMBER:
   PUSH HL
   LD A,(IX+$00)
   LD HL,$0000
 BM1:
-  SUB $64
+  SUB 100          ;hundreds
   JR C,BM2
   INC H
   JR BM1
 BM2:
-  ADD A,$64
+  ADD A,100
 BM3:
-  SUB $0A
+  SUB 10           ;tens
   JR C,BM4
   INC L
   JR BM3
 BM4:
-  ADD A,$0A
+  ADD A,10
   PUSH AF
   LD A,H
   OR A
@@ -1410,10 +1423,16 @@ BM5:
   CALL CCOUT
   POP HL
   RET
-CCOUT:
+
+CCOUT:            ;simply add 30h to print.
   OR A
-  ADD A,$30
+  ADD A,'0'
   JP COUT
+
+;Random number gen. Nothing flash, but it works. Seeded from
+;the refresh register at the start of the game and each
+;move so it should be random.
+;
 RANM:
   PUSH HL
   PUSH DE
@@ -1432,6 +1451,7 @@ L7854:
   POP HL
   POP DE
   RET
+
 RND_FLAG:
   PUSH HL
   CALL RANM
@@ -1443,14 +1463,18 @@ RND_FLAG:
   LD (HL),A
   POP HL
   RET
+
+;This routine describes location, and also all available exits
+;together with a description of items that can be seen.
+;
 DESCR:
-  LD IX,(FLAG)
-  LD HL,(LOC)
+  LD IX,(FLAG)       ;point to flag table
+  LD HL,(LOC)        ;set up pointer to place descr.
   LD B,(IX+$0E)
-  CALL MFETCH
-  LD A,(IX+$10)
-  OR A
-  JR Z,EN1
+  CALL MFETCH        ;print description of current location
+  LD A,(IX+$10)      ;check for visibility
+  OR A               ;test it
+  JR Z,EN1           ;and perhaps miss out dirs.
   LD A,(MSGFLAG)
   OR A
   JR NZ,L7894
@@ -1467,88 +1491,91 @@ L7894:
   LD (MSGFLAG),A
   LD B,(IX+$0E)
   LD HL,(TABKEY)
-  CALL MFETCH
+  CALL MFETCH        ;print : EXITS ARE...
 EN1:
   CALL ICANC_2
   CALL ONCO
   RET
-L78A8:
-  PUSH HL
-  LD D,$00
-  LD E,$00
-  CALL GOTOXY
-  LD A,$20
-  CALL CHROUT
-  LD B,$0D
-  LD HL,(FL16)
-  LD A,(HL)
-  OR A
-  JR Z,L78DF
-  LD HL,(L7087)
-  CALL L7F0A
-  CALL DECOMP_GETCHR
-  LD A,(HL)
-  RES 5,A
-L78CA:
-  OR A
-  JR Z,L78DF
-  CP $23
-  JR Z,L78DF
-  CP $3E
-  JR Z,L78DF
-  CALL CHROUT
-  INC HL
-  CALL DECOMP_GETCHR
-  LD A,(HL)
-  DJNZ L78CA
-L78DF:
-  LD A,$20
-L78E1:
-  CALL CHROUT
-  DJNZ L78E1
-  LD HL,TXT_SCORE
-L78E9:
-  LD A,(HL)
-  OR A
-  JR Z,L78F7
-  CALL CHROUT
-  INC HL
-  JR L78E9
-L78F3:
-  XOR A
-  LD (CCOUNT),A
-L78F7:
-  PUSH IX
-  LD IX,(FL13)
-  CALL PNUMBER
-  LD A,$2F
-  CALL CHROUT
-  LD IX,(FL06)
-  LD A,(IX+$00)
-  OR A
-  JR Z,L7912
-  CALL PNUMBER
-L7912:
-  DEC IX
-  CALL PNUMBER
-  POP IX
-  LD A,$20
-  CALL CHROUT
-  CALL CHROUT
-  CALL CHROUT
-  CALL CRLF
-  LD B,$1E
-  LD A,$20
-L792B:
-  CALL CHROUT
-  DJNZ L792B
-  LD D,$14
-  LD E,$00
-  POP HL
-  JP GOTOXY
-TXT_SCORE:
-  DEFM "Score "
-  DEFB $00
+
+; L78A8:
+;   PUSH HL
+;   LD D,$00
+;   LD E,$00
+;   CALL GOTOXY
+;   LD A,$20
+;   CALL CHROUT
+;   LD B,$0D
+;   LD HL,(FL16)
+;   LD A,(HL)
+;   OR A
+;   JR Z,L78DF
+;   LD HL,(L7087)
+;   CALL L7F0A
+;   CALL DECOMP_GETCHR
+;   LD A,(HL)
+;   RES 5,A
+; L78CA:
+;   OR A
+;   JR Z,L78DF
+;   CP $23
+;   JR Z,L78DF
+;   CP $3E
+;   JR Z,L78DF
+;   CALL CHROUT
+;   INC HL
+;   CALL DECOMP_GETCHR
+;   LD A,(HL)
+;   DJNZ L78CA
+; L78DF:
+;   LD A,$20
+; L78E1:
+;   CALL CHROUT
+;   DJNZ L78E1
+;   LD HL,TXT_SCORE
+; L78E9:
+;   LD A,(HL)
+;   OR A
+;   JR Z,L78F7
+;   CALL CHROUT
+;   INC HL
+;   JR L78E9
+;L78F3:
+;  XOR A
+;  LD (CCOUNT),A
+;L78F7:
+;  PUSH IX
+;  LD IX,(FL13)
+;  CALL PNUMBER
+;  LD A,$2F
+;  CALL CHROUT
+;  LD IX,(FL06)
+;  LD A,(IX+$00)
+;  OR A
+;  JR Z,L7912
+;  CALL PNUMBER
+;L7912:
+;  DEC IX
+;  CALL PNUMBER
+;  POP IX
+;  LD A,$20
+;  CALL CHROUT
+;  CALL CHROUT
+;  CALL CHROUT
+;  CALL CRLF
+;  LD B,$1E
+;  LD A,$20
+;L792B:
+;  CALL CHROUT
+;  DJNZ L792B
+;  LD D,$14
+;  LD E,$00
+;  POP HL
+;  JP GOTOXY
+
+;TXT_SCORE:
+;  DEFM "Score "
+;  DEFB $00
+
 ENTRI:
   LD HL,CODBUF
   LD DE,CODBUF
@@ -1587,6 +1614,7 @@ XLDR:
   INC SP
   INC SP
   JP SRTOUT
+
 ENTRX:
   CALL RND_FLAG
   LD HL,CODBUF
@@ -2443,7 +2471,7 @@ ICANQ_2:
   LD HL,(OBJLOC)
 L7E1E:
   LD C,(IX+$0E)     ; load present location
-  CALL L7EBC
+  CALL ICANX
   JR Z,ICAN3
   INC HL
   LD A,(HL)
@@ -2477,14 +2505,14 @@ ICANC:
 ICANQ:
   LD HL,(OBJLOC)
   LD C,$FE
-  CALL L7EBC
+  CALL ICANX
   JR Z,L7E7A
   LD B,$10
   JR L7E6A
 
 L7E61:
   LD C,$FE
-  CALL L7EBC
+  CALL ICANX
   JR Z,L7E7E
   LD B,$03
 L7E6A:
@@ -2505,12 +2533,12 @@ L7E7E:
 L7E80:
   LD HL,(OBJLOC)
   LD C,$FD
-  CALL L7EBC
+  CALL ICANX
   JR Z,L7EA5
   JR L7E95
 L7E8C:
   LD C,$FD
-  CALL L7EBC
+  CALL ICANX
   JR Z,L7EB2
   LD B,$03
 L7E95:
@@ -2537,20 +2565,22 @@ L7EB2:
 RND_MFETCH:
   CALL RND_FLAG
   JP MFETCH
-L7EBC:
+
+ICANX:
   PUSH DE
   LD DE,$0005
-L7EC0:
+ICAN1:
   ADD HL,DE
   LD A,(HL)
   OR A
-  JR Z,L7EC9
+  JR Z,ICANZ
   CP C
-  JR NZ,L7EC0
+  JR NZ,ICAN1
   OR A
-L7EC9:
+ICANZ:
   POP DE
   RET
+
 ASK_CONFIRM:
   PUSH HL
   LD HL,YES_NO
