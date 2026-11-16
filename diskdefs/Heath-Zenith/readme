@@ -1,5 +1,8 @@
 Heath H8, Heath H89, Zenith Z89
 
+The so called "56K CP/M" provides, due to the shifted base address, a 40K TPA.
+Similarly the base "32K" version is probably providing a much smaller TPA area.
+
 This is a naked boot system image.
 It starts with a configure tool, you can personalize it
 before adding your files (or leave it alone).
