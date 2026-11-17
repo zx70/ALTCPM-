@@ -16,7 +16,7 @@
 ; z88dk-z80asm.exe -b -DNO_ECHO -DNEED_CRLF -DCPMSAVE -oBLACKS.COM -DCOLUMNS=52 blackstar.asm
 
 ; Heath H89 ALT-CP/M 1.4 (56K):
-; z88dk-z80asm.exe -b -DALTCPM -DUSE_BIOS -DNEED_CRLF -oBLACKS.COM blackstar.asm
+; z88dk-z80asm.exe -b -DALTCPM -DNO_ECHO -DNEED_CRLF -oBLACKS.COM blackstar.asm
 
 ; ZX Spectrum 48K
 ; z88dk-z80asm.exe -b -DSPECTRUM blackstar.asm
